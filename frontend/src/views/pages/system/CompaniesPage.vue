@@ -147,7 +147,7 @@
   "locations"; [
     {
       "id": "loc-001",
-      "name": "São Paulo Office",
+      "name": "São Paulo Officee",
       "address": "Av. Paulista, 1000, São Paulo - SP"
     },
     {
