@@ -88,3 +88,6 @@ frontend/
 - PrimeVue para componentes de UI
 - Pinia para gerenciamento de estado
 - Vue Router para navegação
+
+## Link de Ícones
+https://primevue.org/icons/
