@@ -3,38 +3,40 @@
 O POM é um sistema de gerenciamento de atividades projetado para ajudar PEU a organizar e acompanhar atividades de companhias de forma eficiente. Ele fornece recursos para gerenciamento de tarefas e cronogramas de projetos.
 
 ## Estrutura do Projeto
+<pre>
 backend/  
- ├── src/  
- │   ├── controllers/    # Controladores para cada entidade  
- │   ├── models/         # Definições de tipos/interfaces  
- │   ├── repositories/   # Acesso aos dados  
- │   ├── routes/         # Rotas da API  
- │   ├── services/       # Lógica de negócios  
- │   ├── database/       # Gerenciamento do banco de dados JSON  
- │   └── utils/          # Funções utilitárias  
- ├── package.json  
- ├── tsconfig.json  
- └── .env  
+├── src/  
+│   ├── controllers/    # Controladores para cada entidade  
+│   ├── models/         # Definições de tipos/interfaces  
+│   ├── repositories/   # Acesso aos dados  
+│   ├── routes/         # Rotas da API  
+│   ├── services/       # Lógica de negócios  
+│   ├── database/       # Gerenciamento do banco de dados JSON  
+│   └── utils/          # Funções utilitárias  
+├── package.json  
+├── tsconfig.json  
+└── .env  
   
 frontend/  
- ├── public/  
- ├── src/  
- │   ├── assets/  
- │   ├── components/  
- │   │   ├── calendar/  
- │   │   ├── company/  
- │   │   ├── layout/  
- │   │   └── ui/  
- │   ├── router/  
- │   ├── stores/  
- │   ├── types/  
- │   ├── views/  
- │   ├── App.vue  
- │   └── main.ts  
- ├── .env  
- ├── package.json  
- ├── tailwind.config.js  
- └── tsconfig.json  
+├── public/  
+├── src/  
+│   ├── assets/  
+│   ├── components/  
+│   │   ├── calendar/  
+│   │   ├── company/  
+│   │   ├── layout/  
+│   │   └── ui/  
+│   ├── router/  
+│   ├── stores/  
+│   ├── types/  
+│   ├── views/  
+│   ├── App.vue  
+│   └── main.ts  
+├── .env  
+├── package.json  
+├── tailwind.config.js  
+└── tsconfig.json
+</pre>  
   
 ## Pré-requisitos
 - Node.js (v16 or higher)
@@ -89,5 +91,5 @@ frontend/
 - Pinia para gerenciamento de estado
 - Vue Router para navegação
 
-## Link de Ícones
-https://primevue.org/icons/
+## Link Úteis
+- [PrimeVue Icons](https://primevue.org/icons/)
