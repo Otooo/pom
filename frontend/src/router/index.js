@@ -19,6 +19,11 @@ const router = createRouter({
                     component: () => import('@/views/pages/system/CompaniesPage.vue')
                 },
                 {
+                    path: '/locations',
+                    name: 'locations',
+                    component: () => import('@/views/pages/system/LocationsPage.vue')
+                },
+                {
                     path: '/calendar',
                     name: 'calendar',
                     component: () => import('@/views/pages/system/CalendarPage2.vue')
