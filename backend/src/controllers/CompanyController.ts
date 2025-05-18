@@ -1,60 +1,60 @@
 import { Request, Response } from 'express';
-import { DataService } from '../services/DataService';
-import { Company } from '../models/Company';
-import { v4 as uuidv4 } from 'uuid';
-
-const companyService = new DataService<Company>('companies');
+import { HTTP_CODE } from '../types/http_code';
+import { CompanyService } from '../services/CompanyService';
 
 export const CompanyController = {
-  getAllCompanies: (req: Request, res: Response) => {
-    const companies = companyService.getAll();
-    res.json(companies);
-  },
+    getAllCompanies: async (req: Request, res: Response) => {
+        try {
+            const companies = await CompanyService.index();
+            
+            return res.status(HTTP_CODE.SUCCESS).json(companies);
+        } catch (error: any) {
+            const status = error?.name ?? HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
+    
+    getCompanyById: async (req: Request, res: Response) => {
+        try {
+            const company = await CompanyService.find(req.params.id);
+        
+            return res.status(HTTP_CODE.SUCCESS).json(company);
+        } catch (error: any) {
+            const status = error?.name ?? HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
+    
+    createCompany: async (req: Request, res: Response) => {
+       try {
+            const company = await CompanyService.create(req.body);
 
-  getCompanyById: (req: Request, res: Response) => {
-    const company = companyService.getById(req.params.id);
+            return res.status(HTTP_CODE.SUCCESS).json(company);
+        } catch (error: any) {
+            const status = error?.name ?? HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
     
-    if (!company) {
-      return res.status(404).json({ message: 'Empresa não encontrada' });
+    updateCompany: async (req: Request, res: Response) => {
+        try {
+            const updatedCompany = await CompanyService.update(req.params.id, req.body);
+        
+            return res.status(HTTP_CODE.SUCCESS).json(updatedCompany);
+        } catch (error: any) {
+            const status = error?.name ?? HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
+    
+    deleteCompany: async (req: Request, res: Response) => {
+        try {
+            await CompanyService.delete(req.params.id);
+        
+            return res.status(HTTP_CODE.NO_CONTENT).send();
+        } catch (error: any) {
+            const status = error?.name ?? HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
     }
-    
-    res.json(company);
-  },
-
-  createCompany: (req: Request, res: Response) => {
-    const { name, location_id } = req.body;
-    
-    if (!name || !location_id) {
-      return res.status(400).json({ message: 'Nome e local são obrigatórios' });
-    }
-    
-    const newCompany: Company = {
-      id: uuidv4(),
-      name,
-      location_id,
-    };
-    
-    const company = companyService.create(newCompany);
-    res.status(201).json(company);
-  },
-
-  updateCompany: (req: Request, res: Response) => {
-    const updatedCompany = companyService.update(req.params.id, req.body);
-    
-    if (!updatedCompany) {
-      return res.status(404).json({ message: 'Empresa não encontrada' });
-    }
-    
-    res.json(updatedCompany);
-  },
-
-  deleteCompany: (req: Request, res: Response) => {
-    const deleted = companyService.delete(req.params.id);
-    
-    if (!deleted) {
-      return res.status(404).json({ message: 'Empresa não encontrada' });
-    }
-    
-    res.status(204).send();
-  }
 };
