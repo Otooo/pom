@@ -18,10 +18,10 @@ app.use(cors());
 app.use(express.json());
 
 // Rotas
-app.use('/api/users', userRoutes);
-app.use('/api/companies', companyRoutes);
-app.use('/api/locations', locationRoutes);
-app.use('/api/schedules', scheduleRoutes);
+app.use('/api', userRoutes);
+app.use('/api', companyRoutes);
+app.use('/api', locationRoutes);
+app.use('/api', scheduleRoutes);
 
 // Rota de teste
 app.get('/', (req, res) => {
