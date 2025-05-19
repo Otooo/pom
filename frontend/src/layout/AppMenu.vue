@@ -13,6 +13,7 @@ const model = ref([
         items: [
             { label: 'Calendário', icon: 'pi pi-fw pi-calendar', to: '/calendar' },
             { label: 'Companies', icon: 'pi pi-fw pi-building-columns', to: '/companies' },
+            { label: 'Locais', icon: 'pi pi-fw pi-map-marker', to: '/locations' },
         ]
     },
     {
