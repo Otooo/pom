@@ -1,5 +1,5 @@
 import { useAuthStore } from '@/stores/auth';
-import axios from 'axios';
+import axios from '@/config/axios';
 
 /** VARs */
 const API_PATH = '/users';
