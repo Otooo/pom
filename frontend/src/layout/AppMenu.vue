@@ -12,6 +12,8 @@ const model = ref([
         label: 'SYSTEM POM', // TODO: deixar só ele no final e o dashboard :D
         items: [
             { label: 'Calendário', icon: 'pi pi-fw pi-calendar', to: '/calendar' },
+            { label: 'Companies', icon: 'pi pi-fw pi-building-columns', to: '/companies' },
+            { label: 'Locais', icon: 'pi pi-fw pi-map-marker', to: '/locations' },
         ]
     },
     {

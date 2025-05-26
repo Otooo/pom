@@ -3,7 +3,7 @@ import { DataService } from '../services/DataService';
 import { User } from '../models/User';
 import { v4 as uuidv4 } from 'uuid';
 
-const userService = new DataService<User>('users');
+const userService = new DataService<User>(User);
 
 export const UserController = {
   getAllUsers: (req: Request, res: Response) => {

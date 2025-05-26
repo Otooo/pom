@@ -9,6 +9,32 @@ if (!fs.existsSync(path.dirname(dbPath))) {
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 }
 
+const locations = [
+  {
+    id: uuidv4(),
+    name: 'Stand Liberdade',
+    address: 'Av. Paulista, 1000'
+  },
+  {
+    id: uuidv4(),
+    name: 'Stand Niteroi',
+    address: 'Av. Atlântica, 500'
+  }
+];
+
+const companies = [
+  {
+    id: uuidv4(),
+    name: 'Empresa AA',
+    location_id: locations[0].id // ID da localizaçã
+  },
+  {
+    id: uuidv4(),
+    name: 'Empresa BB',
+    location_id: locations[1].id 
+  }
+]
+
 // Dados iniciais
 const initialData = {
   users: [
@@ -19,31 +45,40 @@ const initialData = {
       password: 'admin123'
     }
   ],
-  companies: [
+  locations,
+  companies,
+  schedules: [
     {
       id: uuidv4(),
-      name: 'Empresa A',
-      location: 'São Paulo'
+      date: '2025-05-22', // formato YYYY-MM-DD
+      shift: 'morning',
+      company_id: companies[0].id
     },
     {
       id: uuidv4(),
-      name: 'Empresa B',
-      location: 'Rio de Janeiro'
-    }
-  ],
-  locations: [
-    {
-      id: uuidv4(),
-      name: 'São Paulo',
-      address: 'Av. Paulista, 1000'
+      date: '2025-05-23', // formato YYYY-MM-DD
+      shift: 'morning',
+      company_id: companies[0].id
     },
     {
       id: uuidv4(),
-      name: 'Rio de Janeiro',
-      address: 'Av. Atlântica, 500'
-    }
-  ],
-  schedules: []
+      date: '2025-05-24', // formato YYYY-MM-DD
+      shift: 'morning',
+      company_id: companies[0].id
+    },
+    {
+      id: uuidv4(),
+      date: '2025-05-23', // formato YYYY-MM-DD
+      shift: 'afternoon',
+      company_id: companies[1].id
+    },
+    {
+      id: uuidv4(),
+      date: '2025-05-25', // formato YYYY-MM-DD
+      shift: 'night',
+      company_id: companies[1].id
+    },
+  ]
 };
 
 // Escrever no arquivo

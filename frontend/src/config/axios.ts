@@ -2,7 +2,9 @@ import axios from 'axios';
 import router from '@/router';
 
 // Configuração global do Axios
-axios.defaults.baseURL = 'http://localhost:3000/api';
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE;
+// axios.defaults.withCredentials = false;  
+
 
 // Interceptor para tratar erros de autenticação
 axios.interceptors.response.use(

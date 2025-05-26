@@ -14,14 +14,20 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
+}));
+app.options('*', cors()); // <- isso é essencial para preflight!
+
 app.use(express.json());
 
 // Rotas
-app.use('/api/users', userRoutes);
-app.use('/api/companies', companyRoutes);
-app.use('/api/locations', locationRoutes);
-app.use('/api/schedules', scheduleRoutes);
+app.use('/api', userRoutes);
+app.use('/api', companyRoutes);
+app.use('/api', locationRoutes);
+app.use('/api', scheduleRoutes);
 
 // Rota de teste
 app.get('/', (req, res) => {

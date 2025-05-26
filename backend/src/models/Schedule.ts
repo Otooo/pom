@@ -1,15 +1,14 @@
 export type Shift = 'morning' | 'afternoon' | 'night';
 
-export interface DaySchedule {
-  schedule_id: string; // ID do agendamento
-  shifts: {
-    [key in Shift]: string[]; // Array de IDs de empresas
-  };
+export enum ShiftEnum {
+    MORNING = 'morning',
+    AFTERNOON = 'afternoon',
+    NIGHT = 'night',
 }
 
-export interface Schedule {
-  id: string;
-  date: string; // formato YYYY-MM
-  shift: Shift;
-  company_id: string;
+export class Schedule {
+    id!: string;
+    date!: string; // formato YYYY-MM-DD
+    shift!: Shift;
+    company_id!: string;
 }
