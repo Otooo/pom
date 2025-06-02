@@ -67,5 +67,16 @@ export const ScheduleController = {
             const status = error?.name ?? HTTP_CODE.INTERNAL_SERVER_ERROR;
             return res.status(status).json(error);
         }
-    }
+    },
+
+    generateDataToMsg: async (req: Request, res: Response) => {
+        try {
+            const dataMsg = await ScheduleService.generateDataToMsg(req.body?.monthYear);
+           
+            return res.status(HTTP_CODE.SUCCESS).send(dataMsg);
+        } catch (error: any) {
+            const status = error?.name ?? HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
 };

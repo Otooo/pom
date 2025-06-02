@@ -80,5 +80,37 @@ export const ScheduleService = {
         }
         
         return new Promise((resolve) => resolve(deleted));
-    }
+    },
+
+    generateDataToMsg: (monthYear: string): any => {
+        if (monthYear.length !== 7) {
+            DATA_REQUIRED_ERROR('Mês e ano devem ser informado');
+        }
+
+        let schedules = SERVICE.getAll();
+        schedules = schedules.filter(s => s.date.substring(0, 7) === monthYear);
+        schedules.map(schedule => {
+            schedule.company = COMPANY_SERVICE.getById(schedule.company_id) as Company;
+            schedule.location = LOCATION_SERVICE.getById(schedule.location_id) as Location;
+        })
+
+        const groupedSchedules = schedules.reduce((acc: any, schedule: Schedule) => {
+        	const key = schedule.company_id;
+        	if (!acc[key]) {
+        		acc[key] = [];
+        	}
+
+            const data = {
+                companyName: schedule.company?.name || 'SEM NOME',
+                date: schedule.date,
+                shift: schedule.shift,
+                locationName: schedule.location?.name || 'SEM LOCAL',
+            }
+
+            acc[key].push(data);
+            return acc;
+        }, {} as any);
+
+        return groupedSchedules;
+    },
 };

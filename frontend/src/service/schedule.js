@@ -26,7 +26,11 @@ export const updateSchedule = async (id, { _id, ...schedule }) => {
 export const deleteSchedule = async (id) => {
     return executeActionService(async () => axios.delete(`${API_PATH}/${id}`))
 }
-  
+
+export const generateDataMsg = async (monthYear) => {
+    return executeActionService(async () => axios.post(`${API_PATH}/data-msg`, { monthYear } ));
+}
+
 export const calendarDays = () => {
     const scheduleStore = useScheduleStore();
     
@@ -59,4 +63,4 @@ export const calendarDays = () => {
       
     return days;
 }
-  
+ 

@@ -24,7 +24,20 @@
 			</template>
 
 			<template #end>
-				<Button label="Exportar Mensagens" icon="pi pi-upload" severity="secondary" @click="exportMsgWhatsApp()" />
+				<Button label="Gerar Mensagens" icon="pi pi-upload" severity="secondary" @click="togglePopover" />
+				<Popover ref="popover" id="overlay_panel" style="width: 450px">
+					<Select
+						v-model="dataMsgParam"
+						:options="months"
+						optionLabel="name"
+						optionValue="code"
+						placeholder="Mês"
+						checkmark 
+						:highlightOnSelect="true"
+					/> de {{ format(today, 'yyyy') }}
+					
+					<Button label="Gerar" icon="pi pi-send" @click="exportMsgWhatsApp" severity="info" outlined autofocus />
+				</Popover>
 			</template>
 		</Toolbar>
 		
@@ -140,6 +153,36 @@
 				<Button label="Sim" icon="pi pi-check" @click="handleDelete" severity="danger" outlined autofocus />
 			</template>
 		</Dialog>
+
+		<Dialog
+			header="Mensagem Gerada"
+			v-model:visible="showMessageDialog"
+			:style="{ width: '500px' }"
+			:modal="true"
+		>
+			<div class="p-4">
+				<!-- Área somente-leitura com o texto gerado -->
+				<textarea
+					class="w-full h-48 p-2 border rounded resize-none"
+					readonly
+					v-model="dataMsg"
+				></textarea>
+			</div>
+			<template #footer>
+				<Button
+					label="Copiar"
+					icon="pi pi-copy"
+					@click="copyToClipboard"
+					severity="secondary"
+				/>
+				<Button
+					label="Fechar"
+					icon="pi pi-times"
+					@click="showMessageDialog = false"
+					text
+				/>
+			</template>
+		</Dialog>
 	</div>
 </template>
 
@@ -149,10 +192,11 @@
 	import Loading from '@/components/commons/Loading.vue'
 	import { fetchCompanies } from '@/service/company';
 	import { fetchLocations } from '@/service/location';
-	import { createSchedule, deleteSchedule, fetchSchedules, updateSchedule } from '@/service/schedule';
+	import { createSchedule, deleteSchedule, fetchSchedules, generateDataMsg, updateSchedule } from '@/service/schedule';
 	import { useNotify } from '@/composables/useNotify';
 	import { format, parseISO } from 'date-fns';
 	import { ptBR } from 'date-fns/locale';
+import { shiftResolve } from '@/utils/timeUtil';
 
 	/** CONSTANTS */
     const { successToast, errorToast } = useNotify();
@@ -197,7 +241,21 @@
 		shift: 'morning',
 		location_id: null,
 		date: '',
-	}
+	};
+	const months = [
+		{ name: 'Janeiro', code: `${format(today, 'yyyy')}-01` },
+		{ name: 'Fevereiro', code: `${format(today, 'yyyy')}-02` },
+		{ name: 'Março', code: `${format(today, 'yyyy')}-03` },
+		{ name: 'Abril', code: `${format(today, 'yyyy')}-04` },
+		{ name: 'Maio', code: `${format(today, 'yyyy')}-05` },
+		{ name: 'Junho', code: `${format(today, 'yyyy')}-06` },
+		{ name: 'Julho', code: `${format(today, 'yyyy')}-07` },
+		{ name: 'Agosto', code: `${format(today, 'yyyy')}-08` },
+		{ name: 'Setembro', code: `${format(today, 'yyyy')}-09` },
+		{ name: 'Outubro', code: `${format(today, 'yyyy')}-10` },
+		{ name: 'Novembro', code: `${format(today, 'yyyy')}-11` },
+		{ name: 'Dezembro', code: `${format(today, 'yyyy')}-12` }
+	];
 
 	/** VARIABLES */
 	const schedules = ref([]);
@@ -212,6 +270,10 @@
 	const displayDeleteConfirmation = ref(false);
 	const draggedCompany = ref(null);
 	const form = ref(defaultForm);
+	const popover = ref(null);
+	const dataMsgParam = ref(format(today, 'yyyy-MM'));
+	const dataMsg = ref('');
+	const showMessageDialog = ref(false);
 
 	/** COMPUTE & WATCH */
 	const selectedDateFormatted = computed(() => {
@@ -449,6 +511,52 @@
 			onCreateEvent(dateString, draggedCompany.value);
 		}
 	};
+
+	const togglePopover = (ev) => {
+		popover.value.toggle(ev);
+	}
+
+	const exportMsgWhatsApp = () => {
+		loading.value = true;
+		generateDataMsg(dataMsgParam.value).then((data) => {
+			dataMsg.value = handleMsg(data)
+			showMessageDialog.value = true
+			successToast('Mensagem gerada com sucesso!');
+		}).catch((error) => {
+			errorToast(error?.message);
+		}).finally(() => {
+			togglePopover(null);
+			loading.value = false;
+		})
+	}
+
+	const handleMsg = (data) => {
+		if (!data) {
+			return 'Nenhuma mensagem disponível para o período selecionado.'
+		}
+
+		let text = `\n`;
+		Object.entries(data).forEach(([key, items]) => {
+			text += `${items[0].companyName}\n`;
+			items.forEach(value => {
+				text += `${format(parseISO(value.date), 'dd/MM')} - ${value.locationName} (${shiftResolve(value.shift)})\n`
+			})
+			text += '\n';
+		});
+
+		return text;
+	}
+
+	const copyToClipboard = () => {
+		navigator.clipboard
+		.writeText(dataMsg.value)
+		.then(() => {
+			successToast('Texto copiado para a área de transferência!')
+		})
+			.catch((err) => {
+			errorToast('Falha ao copiar: ' + err)
+		})
+	}
 
 </script>
 
