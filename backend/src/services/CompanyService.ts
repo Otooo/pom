@@ -23,10 +23,10 @@ export const CompanyService = {
     },
     
     create: (data: Omit<Company, 'id'>): Promise<Company> => {
-        const { name, location_id } = data;
+        const { name } = data;
         
-        if (!name || !location_id) {
-            DATA_REQUIRED_ERROR('Nome e Local são obrigatórios');
+        if (!name) {
+            DATA_REQUIRED_ERROR('Nome é obrigatório');
         }
         
         const newCompany: Company = {

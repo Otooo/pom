@@ -1,3 +1,6 @@
+import { Company } from "./Company";
+import { Location } from "./Location";
+
 export type Shift = 'morning' | 'afternoon' | 'night';
 
 export enum ShiftEnum {
@@ -11,4 +14,8 @@ export class Schedule {
     date!: string; // formato YYYY-MM-DD
     shift!: Shift;
     company_id!: string;
+    location_id!: string;
+
+    company?: Company;
+    location?: Location;
 }
