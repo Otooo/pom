@@ -2,12 +2,22 @@ import { DataService } from '../services/DataService';
 import { Schedule } from '../models/Schedule';
 import { v4 as uuidv4 } from 'uuid';
 import { DATA_NOT_FOUND_ERROR, DATA_REQUIRED_ERROR } from '../utils/error';
+import { Company } from '../models/Company';
+import { Location } from '../models/Location';
 
 const SERVICE = new DataService<Schedule>(Schedule);
+
+const COMPANY_SERVICE = new DataService<Company>(Company);
+const LOCATION_SERVICE = new DataService<Location>(Location);
 
 export const ScheduleService = {
     index: (): Promise<Schedule[]> => {
         const schedules = SERVICE.getAll();
+
+        schedules.map(schedule => {
+            schedule.company = COMPANY_SERVICE.getById(schedule.company_id) as Company;
+            schedule.location = LOCATION_SERVICE.getById(schedule.location_id) as Location;
+        })
         
         return new Promise((resolve) => resolve(schedules as Schedule[]));
     },
@@ -35,10 +45,10 @@ export const ScheduleService = {
     },
 
     create: (data: Omit<Schedule, 'id'>): Promise<Schedule> => {
-		const { date, shift, company_id } = data;
+		const { date, shift, company_id, location_id } = data;
 		
-		if (!date || !shift || !company_id) {
-            DATA_REQUIRED_ERROR('Data, turnos e companhia são obrigatórios');
+		if (!date || !shift || !company_id || !location_id) {
+            DATA_REQUIRED_ERROR('Data, turnos, companhia e local são obrigatórios');
         }
 		
 		const newSchedule: Schedule = {

@@ -26,12 +26,10 @@ const companies = [
   {
     id: uuidv4(),
     name: 'Empresa AA',
-    location_id: locations[0].id // ID da localizaçã
   },
   {
     id: uuidv4(),
-    name: 'Empresa BB',
-    location_id: locations[1].id 
+    name: 'Empresa BB'
   }
 ]
 
@@ -52,31 +50,36 @@ const initialData = {
       id: uuidv4(),
       date: '2025-05-22', // formato YYYY-MM-DD
       shift: 'morning',
-      company_id: companies[0].id
+      company_id: companies[0].id,
+      location_id: locations[0].id // ID da localizaçã
     },
     {
       id: uuidv4(),
       date: '2025-05-23', // formato YYYY-MM-DD
       shift: 'morning',
-      company_id: companies[0].id
+      company_id: companies[0].id,
+      location_id: locations[0].id // ID da localizaçã
     },
     {
       id: uuidv4(),
       date: '2025-05-24', // formato YYYY-MM-DD
       shift: 'morning',
-      company_id: companies[0].id
+      company_id: companies[0].id,
+      location_id: locations[0].id // ID da localizaçã
     },
     {
       id: uuidv4(),
       date: '2025-05-23', // formato YYYY-MM-DD
       shift: 'afternoon',
-      company_id: companies[1].id
+      company_id: companies[1].id,
+      location_id: locations[1].id
     },
     {
       id: uuidv4(),
       date: '2025-05-25', // formato YYYY-MM-DD
       shift: 'night',
-      company_id: companies[1].id
+      company_id: companies[1].id,
+      location_id: locations[1].id
     },
   ]
 };

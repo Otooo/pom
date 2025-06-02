@@ -8,6 +8,9 @@ const prefix = '/schedules';
 scheduleRoutes.get(`${prefix}`, ScheduleController.getAllSchedules);
 scheduleRoutes.get(`${prefix}/:id`, ScheduleController.getScheduleById);
 scheduleRoutes.get(`${prefix}/:date`, ScheduleController.getScheduleByDate);
+
 scheduleRoutes.put(`${prefix}/:id`, ScheduleController.updateSchedule);
+
 scheduleRoutes.post(`${prefix}`, ScheduleController.createSchedule);
+
 scheduleRoutes.delete(`${prefix}/:id`, ScheduleController.deleteSchedule);
