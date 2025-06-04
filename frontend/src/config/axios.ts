@@ -2,7 +2,7 @@ import axios from 'axios';
 import router from '@/router';
 
 // Configuração global do Axios
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE;
+axios.defaults.baseURL = (window as any).backendUrl || import.meta.env.VITE_API_BASE;
 // axios.defaults.withCredentials = false;  
 
 

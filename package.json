@@ -1,0 +1,40 @@
+{
+	"name": "pom",
+	"author": { "name": "princess" },
+	"description": "Aplicação de alocação de empresas para locais em determinado turno",
+	"version": "1.0.0",
+	"main": "main.js",
+	"scripts": {
+		"serve:front": "cd frontend && npm run serve",
+	  	"serve:back": "cd backend && npm run serve",
+		"build:frontend": "cd frontend && npm run build",
+    	"build:backend": "cd backend && npm run build",    
+		"electron": "electron .", 
+		"electron:dev": "npm run build:frontend && electron .", 
+		"electron:build": "npm run build:backend && npm run build:frontend && electron-builder --win"
+	},
+	"build": {
+		"appId": "com.princess.pom",
+		"productName": "POM",
+		"directories": {
+			"output": "dist_electron"
+		},
+		"icon": "assets/icons/icon.png",
+		"mac": {
+			"category": "public.app-category.productivity",
+			"icon": "assets/icons/icon.icns"
+		},
+		"win": {
+			"target": ["nsis", "portable"],
+			"icon": "assets/icons/icon.ico"
+		},
+		"linux": {
+			"target": ["AppImage", "deb"],
+			"icon": "assets/icons/icon.png"
+		}
+	},
+	"devDependencies": {
+		"electron": "^36.3.2",
+		"electron-builder": "^26.0.12"
+	}
+}
