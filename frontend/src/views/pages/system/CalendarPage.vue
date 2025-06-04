@@ -196,7 +196,7 @@
 	import { useNotify } from '@/composables/useNotify';
 	import { format, parseISO } from 'date-fns';
 	import { ptBR } from 'date-fns/locale';
-import { shiftResolve } from '@/utils/timeUtil';
+	import { shiftResolve } from '@/utils/timeUtil';
 
 	/** CONSTANTS */
     const { successToast, errorToast } = useNotify();
@@ -288,7 +288,6 @@ import { shiftResolve } from '@/utils/timeUtil';
 		return form.value.id? 'Editar' : 'Adicionar';
 	});
 
-
 	/** METHODS */
 	const handleScheduleEvents = async () => {
 		const tempSchedules = [];
@@ -296,10 +295,9 @@ import { shiftResolve } from '@/utils/timeUtil';
 			data.forEach(schedule => {
 				tempSchedules.push({
 					id: schedule.id,
-					title: `${schedule.company.name} - ${schedule.location.name} - ${schedule.shift}`,
+					title: `${schedule.company.name} - ${schedule.location.name} - ${shiftResolve(schedule.shift)}`,
 					time: { start: schedule.date, end: schedule.date },
-					topic: schedule.shift,
-					// description: `${schedule.company.name} - ${schedule.location.name} - ${schedule.shift}`,
+					topic: shiftResolve(schedule.shift),
 					location: schedule.location.name,
 					with: schedule.company.name,
 					colorScheme: schedule.shift,
