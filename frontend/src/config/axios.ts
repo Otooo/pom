@@ -2,7 +2,7 @@ import axios from 'axios';
 import router from '@/router';
 
 // Configuração global do Axios
-const {isElectron, backendUrl} = (window as any).electronAPI 
+const { isElectron = false, backendUrl = '' } = (window as any).electronAPI || {};
 
 axios.defaults.baseURL = isElectron
 	? backendUrl 

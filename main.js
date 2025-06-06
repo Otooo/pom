@@ -1,14 +1,14 @@
 // 1) Importa o electron-log
-// const log = require('electron-log');
+const log = require('electron-log');
 
-// // 2) Opcional: redireciona console.log e console.error para arquivos  
-// //    e, simultaneamente, continua imprimindo no terminal para debug
-// log.transports.file.level = 'info';   // níveis possíveis: 'info', 'warn', 'error', 'debug'
-// log.transports.console.level = 'debug'; // mostra tudo no console também
+// 2) Opcional: redireciona console.log e console.error para arquivos  
+//    e, simultaneamente, continua imprimindo no terminal para debug
+log.transports.file.level = 'info';   // níveis possíveis: 'info', 'warn', 'error', 'debug'
+log.transports.console.level = 'debug'; // mostra tudo no console também
 
-// // Redireciona console.log / console.error para electron-log
-// console.log = log.log;
-// console.error = log.error;
+// Redireciona console.log / console.error para electron-log
+console.log = log.log;
+console.error = log.error;
 
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
@@ -21,6 +21,42 @@ const fs = require('fs');
 // quando o objeto JavaScript for coletado pelo garbage collector
 let mainWindow;
 let backendProcess;
+
+// 1) Tenta pegar o lock para evitar múltiplas instâncias
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  // Já existe outra instância → encerra imediatamente
+  app.quit();
+} else {
+  // Se outra instância for aberta, apenas foca a janela principal
+  app.on('second-instance', (event, argv, workingDirectory) => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+
+  // 2) Se estivermos aqui, é a instância principal → segue a inicialização
+  app.whenReady().then(startBackend);
+
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+      // Encerra o backend, se existir
+      if (backendProcess) {
+        backendProcess.kill();
+        backendProcess = null;
+      }
+      app.quit();
+    }
+  });
+
+  app.on('activate', () => {
+    // No macOS, se o app estiver ativo mas sem janelas, recria
+    if (mainWindow === null) {
+      createWindow();
+    }
+  });
+}
 
 // Função para iniciar o servidor backend
 function startBackend() {
@@ -108,6 +144,20 @@ function createWindow() {
         }
     });
     
+    // **Antes de carregar qualquer URL**, inscreva-se em “console-message”:
+    mainWindow.webContents.on('console-message', (details) => {
+        const { message } = details;
+        if (
+            message.includes('Autofill.enable') ||
+            message.includes('Autofill.setAddresses') || 
+            message.includes('Electron Security Warning')
+        ) {
+            // impede que essa mensagem apareça no Console
+            details.preventDefault();
+        }
+    });
+
+
     // 3) Em DEV, carrega de __dirname + '/frontend/dist/index.html'
     //    Em PROD, como empacotamos a pasta “frontend/dist” para dentro de “resources/app/frontend/dist”:
     const possibleDevFront = path.join(__dirname, 'frontend', 'dist', 'index.html');
@@ -123,11 +173,11 @@ function createWindow() {
     
     let frontendEntry;
     if (fs.existsSync(possibleProdFront)) {
-        console.log('[createWindow] Carregando front-end de PROD');
         frontendEntry = `file://${possibleProdFront}`;
+        console.log('[createWindow] Carregando front-end de PROD' + ` de: ${frontendEntry}`);
     } else if (fs.existsSync(possibleDevFront)) {
-        console.log('[createWindow] Carregando front-end de DEV');
         frontendEntry = `file://${possibleDevFront}`;
+        console.log('[createWindow] Carregando front-end de DEV' + ` de: ${frontendEntry}`);
     } else {
         console.error('[createWindow] Frontend não encontrado em nenhum dos paths:');
         console.error(' →', possibleProdFront);
@@ -152,7 +202,7 @@ function createWindow() {
 app.whenReady().then(() => {
     startBackend();
     // Dá 500ms–1s para o Express subir antes de abrir a janela
-    setTimeout(createWindow, 1000);
+    setTimeout(createWindow, 2000);
 });
 
 app.on('window-all-closed', () => {
