@@ -1,13 +1,14 @@
 import AppLayout from '@/layout/AppLayout.vue';
 import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router';
 
-const isElectron = window && window.electronAPI && window.electronAPI.isElectron;
-const history = isElectron
-  ? createWebHashHistory()
-  : createWebHistory();
+function chooseHistory() {
+    return import.meta.env.VITE_MODE == 'electron'
+        ? createWebHashHistory()
+        : createWebHistory();
+}
 
 const router = createRouter({
-    history: history,
+    history: chooseHistory(),
     routes: [
         {
             path: '/',

@@ -23,40 +23,56 @@ let mainWindow;
 let backendProcess;
 
 // 1) Tenta pegar o lock para evitar múltiplas instâncias
-const gotTheLock = app.requestSingleInstanceLock();
-if (!gotTheLock) {
-  // Já existe outra instância → encerra imediatamente
-  app.quit();
-} else {
-  // Se outra instância for aberta, apenas foca a janela principal
-  app.on('second-instance', (event, argv, workingDirectory) => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-    }
-  });
-
-  // 2) Se estivermos aqui, é a instância principal → segue a inicialização
-  app.whenReady().then(startBackend);
-
-  app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-      // Encerra o backend, se existir
-      if (backendProcess) {
-        backendProcess.kill();
-        backendProcess = null;
-      }
-      app.quit();
-    }
-  });
-
-  app.on('activate', () => {
-    // No macOS, se o app estiver ativo mas sem janelas, recria
-    if (mainWindow === null) {
-      createWindow();
-    }
-  });
-}
+console.log('[main.js] Carregando arquivo');
+// const gotTheLock = app.requestSingleInstanceLock();
+// if (!gotTheLock) {
+//     // Já existe outra instância rodando → sai AGORA sem mais nada
+//     app.quit();
+// } else {
+    // Se o usuário tentar abrir uma nova instância, apenas foca
+    // app.on('second-instance', () => {
+    //     if (mainWindow) {
+    //         if (mainWindow.isMinimized()) mainWindow.restore();
+    //         mainWindow.focus();
+    //     }
+    // });
+    
+    // ==============================================
+    // 2) Somente nesta “instância vencedora” prosseguimos:
+    //    – esperamos o Electron ficar pronto
+    //    – subimos o backend
+    //    – criamos a única janela do app
+    // ==============================================
+    app.whenReady().then(async () => {
+        try {
+            await startBackend();
+            setTimeout(() => {
+                createWindow();
+            }, 1000);
+        } catch (err) {
+            console.error('[main] Falha ao iniciar o backend:', err);
+            app.quit();
+        }
+    });
+    
+    // No macOS, se clicar no ícone e não houver janelas abertas, recria:
+    // app.on('activate', () => {
+    //     if (mainWindow == null) {
+    //         createWindow();
+    //     }
+    // });
+    
+    // Se o usuário fechar todas as janelas, desligamos o backend e saímos
+    app.on('window-all-closed', () => {
+        if (backendProcess) {
+            backendProcess.kill();
+            backendProcess = null;
+        }
+        if (process.platform !== 'darwin') {
+            app.quit();
+        }
+    });
+// }
 
 // Função para iniciar o servidor backend
 function startBackend() {
@@ -90,7 +106,7 @@ function startBackend() {
     const devPath = path.join(__dirname, 'backend', 'dist', 'index.js');
     
     console.log('[startBackend] Checando paths:');
-
+    
     let backendEntry;
     
     if (fs.existsSync(unpackedPath)) {
@@ -130,6 +146,15 @@ function startBackend() {
     backendProcess.on('close', (code) => {
         console.log(`Backend processo encerrado com código ${code}`);
     });
+    
+    backendProcess.on('error', (err) => {
+        console.error('[startBackend] Falha ao iniciar o processo do backend:', err);
+        // Exibe toast se você quiser, mas aqui como é no main process, só faz log e sai
+        if (code !== 0) {
+            console.error('[startBackend] O backend saiu com erro. Encerrando o app.');
+        }
+        app.quit();
+    });
 }
 
 // Função para criar a janela do aplicativo
@@ -156,8 +181,8 @@ function createWindow() {
             details.preventDefault();
         }
     });
-
-
+    
+    
     // 3) Em DEV, carrega de __dirname + '/frontend/dist/index.html'
     //    Em PROD, como empacotamos a pasta “frontend/dist” para dentro de “resources/app/frontend/dist”:
     const possibleDevFront = path.join(__dirname, 'frontend', 'dist', 'index.html');
@@ -197,21 +222,3 @@ function createWindow() {
         }
     });
 }
-
-// Quando o Electron estiver pronto, sobe o backend e depois a janela
-app.whenReady().then(() => {
-    startBackend();
-    // Dá 500ms–1s para o Express subir antes de abrir a janela
-    setTimeout(createWindow, 2000);
-});
-
-app.on('window-all-closed', () => {
-    if (backendProcess) {
-        backendProcess.kill();
-        backendProcess = null;
-    }
-    if (process.platform !== 'darwin') {
-        app.quit();
-    }
-});
-

@@ -7,11 +7,10 @@
 	"version": "1.0.0",
 	"main": "main.js",
 	"scripts": {
-		"serve:front": "cd frontend && npm run serve",
-		"serve:back": "cd backend && npm run serve",
-		"build:frontend": "cd frontend && npm run build",
+		"front": "cd frontend && npm run dev",
+		"back": "cd backend && npm run dev",
+		"build:frontend": "cd frontend && npm run electron:build",
 		"build:backend": "cd backend && npm run build",
-		"electron": "electron .",
 		"electron:dev": "npm run build:frontend && electron --disable-features=Autofill,AutofillServerExperimentSupport .",
 		"electron:build": "npm run build:backend && npm run build:frontend && electron-builder --win"
 	},
