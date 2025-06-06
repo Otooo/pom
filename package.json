@@ -1,40 +1,70 @@
 {
 	"name": "pom",
-	"author": { "name": "princess" },
+	"author": {
+		"name": "princess"
+	},
 	"description": "Aplicação de alocação de empresas para locais em determinado turno",
 	"version": "1.0.0",
 	"main": "main.js",
 	"scripts": {
 		"serve:front": "cd frontend && npm run serve",
-	  	"serve:back": "cd backend && npm run serve",
+		"serve:back": "cd backend && npm run serve",
 		"build:frontend": "cd frontend && npm run build",
-    	"build:backend": "cd backend && npm run build",    
-		"electron": "electron .", 
-		"electron:dev": "npm run build:frontend && electron .", 
+		"build:backend": "cd backend && npm run build",
+		"electron": "electron .",
+		"electron:dev": "npm run build:frontend && electron .",
 		"electron:build": "npm run build:backend && npm run build:frontend && electron-builder --win"
 	},
 	"build": {
 		"appId": "com.princess.pom",
 		"productName": "POM",
+		"compression": "maximum",
 		"directories": {
 			"output": "dist_electron"
 		},
+		"files": [
+			"main.js",
+			"preload.js",
+			{
+				"from": "backend/dist",
+				"to":   "backend/dist",
+				"filter": ["**/*"]
+			},
+			{
+				"from": "frontend/dist",
+				"to":   "frontend/dist",
+				"filter": ["**/*"]
+			}
+		],
+		"asar": true,
+		"asarUnpack": [
+			"backend/dist/**/*"
+		],
 		"icon": "assets/icons/icon.png",
 		"mac": {
 			"category": "public.app-category.productivity",
 			"icon": "assets/icons/icon.icns"
 		},
 		"win": {
-			"target": ["nsis", "portable"],
+			"target": [
+				"nsis",
+				"portable"
+			],
 			"icon": "assets/icons/icon.ico"
 		},
 		"linux": {
-			"target": ["AppImage", "deb"],
+			"target": [
+				"AppImage",
+				"deb"
+			],
 			"icon": "assets/icons/icon.png"
 		}
 	},
 	"devDependencies": {
 		"electron": "^36.3.2",
 		"electron-builder": "^26.0.12"
+	},
+	"dependencies": {
+		"electron-log": "^5.4.0"
 	}
 }

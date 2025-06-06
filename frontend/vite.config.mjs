@@ -33,6 +33,9 @@ export default defineConfig(({ mode }) => {
                     changeOrigin: true,
                 },
             },
+        },
+        build: {
+            chunkSizeWarningLimit: 2000 // Valor em kB (2000kB = 2MB)
         }
     };
 });

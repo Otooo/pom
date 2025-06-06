@@ -436,22 +436,16 @@
 		})
 	}
 
-	onMounted(async () => {
+	onMounted(() => {
         loading.value = true;
-		try {
-			await handleScheduleEvents();
-			await handleCompaniesSelect();
-			await handleLocationsSelect();
-			
-			await nextTick();
-			setupDropListeners();
-        
-			successToast('Itens carregados com sucesso!');
-		} catch (error) {
-			errorToast(error?.message);
-		} finally {
-			loading.value = false;
-		}
+		
+		handleScheduleEvents()
+		.then(handleCompaniesSelect)
+		.then(handleLocationsSelect)
+		.then(() => nextTick())
+		.then(() => setupDropListeners())
+		.catch(error => { errorToast(error?.message); })
+		.finally(() => { loading.value = false; });
     })
 
 	const setupDropListeners = (retries = 2) => {

@@ -1,3 +1,15 @@
+// 1) Importa o electron-log
+// const log = require('electron-log');
+
+// // 2) Opcional: redireciona console.log e console.error para arquivos  
+// //    e, simultaneamente, continua imprimindo no terminal para debug
+// log.transports.file.level = 'info';   // níveis possíveis: 'info', 'warn', 'error', 'debug'
+// log.transports.console.level = 'debug'; // mostra tudo no console também
+
+// // Redireciona console.log / console.error para electron-log
+// console.log = log.log;
+// console.error = log.error;
+
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
@@ -12,103 +24,144 @@ let backendProcess;
 
 // Função para iniciar o servidor backend
 function startBackend() {
-  console.log('Iniciando o servidor backend...');
-  
-  // Caminho para o arquivo de entrada do backend compilado
-  const backendPath = path.join(__dirname, 'backend', 'dist', 'index.js');
-  
-  // Inicia o processo do backend
-  backendProcess = spawn('node', [backendPath], {
-    stdio: 'pipe' // Captura saída para logs
-  });
-  
-  // Log de saída do backend
-  backendProcess.stdout.on('data', (data) => {
-    console.log(`Backend: ${data}`);
-  });
-  
-  backendProcess.stderr.on('data', (data) => {
-    console.error(`Backend erro: ${data}`);
-  });
-  
-  backendProcess.on('close', (code) => {
-    console.log(`Backend processo encerrado com código ${code}`);
-  });
+    console.log('Iniciando o servidor backend...');
+    
+    // 1) Em dev: __dirname aponta para a raiz do projeto
+    //    Em prod: process.resourcesPath aponta para “…/pom/resources”
+    const resourcesPath = process.resourcesPath;
+    
+    // 2a) Em PROD (asar = true + asarUnpack), o backend estará em:
+    //    resources/app.asar.unpacked/backend/dist/index.js
+    const unpackedPath = path.join(
+        resourcesPath,
+        'app.asar.unpacked',
+        'backend',
+        'dist',
+        'index.js'
+    );
+    
+    // 2b) Em PROD, caso não use asarUnpack, poderia estar em:
+    //    resources/app/backend/dist/index.js
+    const directPath = path.join(
+        resourcesPath,
+        'app',
+        'backend',
+        'dist',
+        'index.js'
+    );
+    
+    // 2c) Em DEV, __dirname + '/backend/dist/index.js'
+    const devPath = path.join(__dirname, 'backend', 'dist', 'index.js');
+    
+    console.log('[startBackend] Checando paths:');
+
+    let backendEntry;
+    
+    if (fs.existsSync(unpackedPath)) {
+        console.log('[startBackend] Encontrado em unpackedPath');
+        backendEntry = unpackedPath;
+    } else if (fs.existsSync(directPath)) {
+        console.log('[startBackend] Encontrado em directPath');
+        backendEntry = directPath;
+    } else if (fs.existsSync(devPath)) {
+        console.log('[startBackend] Modo DEV: encontrado em devPath');
+        backendEntry = devPath;
+    } else {
+        console.error('[startBackend] Arquivo não encontrado em nenhum path:');
+        console.error(' →', unpackedPath);
+        console.error(' →', directPath);
+        console.error(' →', devPath);
+        app.quit();
+        return;
+    }
+    
+    console.log('[startBackend] Iniciando backend em:', backendEntry);
+    
+    backendProcess = spawn(process.execPath, [backendEntry], {
+        cwd: path.dirname(backendEntry),
+        stdio: 'pipe'
+    });
+    
+    // Log de saída do backend
+    backendProcess.stdout.on('data', (data) => {
+        console.log(`Backend: ${data}`);
+    });
+    
+    backendProcess.stderr.on('data', (data) => {
+        console.error(`Backend erro: ${data}`);
+    });
+    
+    backendProcess.on('close', (code) => {
+        console.log(`Backend processo encerrado com código ${code}`);
+    });
 }
 
 // Função para criar a janela do aplicativo
 function createWindow() {
-  // Cria a janela do navegador
-  mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    webPreferences: {
-      nodeIntegration: true, // Permite integração com Node.js
-      contextIsolation: false, // Desativa isolamento de contexto
-      preload: path.join(__dirname, 'preload.js') // Script de pré-carregamento
-    }
-  });
-
-  // Carrega o frontend
-  const frontendPath = path.join(__dirname, 'frontend', 'dist', 'index.html');
-  
-  // Verifica se o arquivo existe
-  if (fs.existsSync(frontendPath)) {
-    mainWindow.loadURL(url.format({
-      pathname: frontendPath,
-      protocol: 'file:',
-      slashes: true
-    }));
-  } else {
-    console.error('Frontend não encontrado. Execute npm run build:frontend primeiro.');
-    app.quit();
-  }
-
-  // Abre o DevTools em ambiente de desenvolvimento
-  mainWindow.webContents.openDevTools();
-
-  // Emitido quando a janela é fechada
-  mainWindow.on('closed', function() {
-    // Desreferencia o objeto da janela
-    mainWindow = null;
+    mainWindow = new BrowserWindow({
+        width: 1200,
+        height: 800,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'preload.js')
+        }
+    });
     
-    // Encerra o processo do backend quando a janela é fechada
-    if (backendProcess) {
-      backendProcess.kill();
-      backendProcess = null;
+    // 3) Em DEV, carrega de __dirname + '/frontend/dist/index.html'
+    //    Em PROD, como empacotamos a pasta “frontend/dist” para dentro de “resources/app/frontend/dist”:
+    const possibleDevFront = path.join(__dirname, 'frontend', 'dist', 'index.html');
+    const possibleProdFront = path.join(
+        process.resourcesPath,
+        'app',
+        'frontend',
+        'dist',
+        'index.html'
+    );
+    
+    console.log('[createWindow] Checando front-ends:');
+    
+    let frontendEntry;
+    if (fs.existsSync(possibleProdFront)) {
+        console.log('[createWindow] Carregando front-end de PROD');
+        frontendEntry = `file://${possibleProdFront}`;
+    } else if (fs.existsSync(possibleDevFront)) {
+        console.log('[createWindow] Carregando front-end de DEV');
+        frontendEntry = `file://${possibleDevFront}`;
+    } else {
+        console.error('[createWindow] Frontend não encontrado em nenhum dos paths:');
+        console.error(' →', possibleProdFront);
+        console.error(' →', possibleDevFront);
+        app.quit();
+        return;
     }
-  });
+    
+    mainWindow.loadURL(frontendEntry);
+    mainWindow.webContents.openDevTools();
+    
+    mainWindow.on('closed', () => {
+        mainWindow = null;
+        if (backendProcess) {
+            backendProcess.kill();
+            backendProcess = null;
+        }
+    });
 }
 
-// Este método será chamado quando o Electron terminar a inicialização
-app.on('ready', () => {
-  startBackend();
-  
-  // Aguarda um pouco para o backend iniciar antes de abrir a janela
-  setTimeout(() => {
-    createWindow();
-  }, 1000);
+// Quando o Electron estiver pronto, sobe o backend e depois a janela
+app.whenReady().then(() => {
+    startBackend();
+    // Dá 500ms–1s para o Express subir antes de abrir a janela
+    setTimeout(createWindow, 1000);
 });
 
-// Sai quando todas as janelas estiverem fechadas
-app.on('window-all-closed', function() {
-  // No macOS é comum para aplicativos permanecerem ativos até que o usuário saia explicitamente
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+app.on('window-all-closed', () => {
+    if (backendProcess) {
+        backendProcess.kill();
+        backendProcess = null;
+    }
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
 });
 
-app.on('activate', function() {
-  // No macOS é comum recriar uma janela quando o ícone da dock é clicado e não há outras janelas abertas
-  if (mainWindow === null) {
-    createWindow();
-  }
-});
-
-// Limpa recursos antes de sair
-app.on('before-quit', () => {
-  if (backendProcess) {
-    backendProcess.kill();
-    backendProcess = null;
-  }
-});
