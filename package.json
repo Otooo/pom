@@ -26,13 +26,17 @@
 			"preload.js",
 			{
 				"from": "backend/dist",
-				"to":   "backend/dist",
-				"filter": ["**/*"]
+				"to": "backend/dist",
+				"filter": [
+					"**/*"
+				]
 			},
 			{
 				"from": "frontend/dist",
-				"to":   "frontend/dist",
-				"filter": ["**/*"]
+				"to": "frontend/dist",
+				"filter": [
+					"**/*"
+				]
 			}
 		],
 		"asar": true,
@@ -60,6 +64,7 @@
 		}
 	},
 	"devDependencies": {
+		"cross-env": "^7.0.3",
 		"electron": "^36.3.2",
 		"electron-builder": "^26.0.12"
 	},
