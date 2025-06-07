@@ -35,7 +35,7 @@
         </div>
         <div class="col-span-12 xl:col-span-12">
             <BarChartWidget 
-                title="Empresas Alocações Locais"
+                title="Locais Alocações Emmpresas"
                 :data="dataCompanies"
                 :labels="labelCompanies"
             />
@@ -105,7 +105,7 @@ import { fetchSchedules} from '@/service/schedule';
         });
 
         const result = [];
-        const percent = 100 / total;
+        const percent = total? (100 / total) : 0;
         Object.keys(data).forEach((key) => {
         	result.push({
                 name: key,

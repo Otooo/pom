@@ -5,7 +5,7 @@
 		<Loading :loading="loading" loadingText="Processando Requisição..." />
 
 		<!-- Drag Drop Companies & Export MSGs -->
-		<Toolbar class="mb-6">
+		<Toolbar v-if="companies.length" class="mb-6">
 			<template #start>
 				<div>
 					<div class="font-semibold text-xl mb-2">Empresas disponíveis</div>
