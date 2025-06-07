@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd());
 
     return {
+        base: './',
         optimizeDeps: {
             noDiscovery: true
         },
@@ -32,6 +33,9 @@ export default defineConfig(({ mode }) => {
                     changeOrigin: true,
                 },
             },
-        }
+        },
+        // build: {
+        //     chunkSizeWarningLimit: 2000 // Valor em kB (2000kB = 2MB)
+        // }
     };
 });

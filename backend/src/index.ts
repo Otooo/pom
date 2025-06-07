@@ -8,7 +8,7 @@ import { scheduleRoutes } from './routes/scheduleRoutes';
 
 // Configuração do ambiente
 dotenv.config();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 9009;
 
 // Inicialização do app
 const app = express();
