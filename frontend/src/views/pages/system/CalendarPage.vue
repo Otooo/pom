@@ -385,13 +385,13 @@
 
 		handleEdit().then((data) => {
 			successToast('Empresa alocada com sucesso!');
-			handleScheduleEvents();
-		}).catch((error) => {
+		}).then(handleScheduleEvents)
+		.catch((error) => {
 			errorToast(error?.message);
 		}).finally(() => {
-			loading.value = false;
-			waitForCalendarToDrag();
 			hideDialog();
+			waitForCalendarToDrag();
+			loading.value = false;
 		})
 	}
 
@@ -404,13 +404,13 @@
 
 		action().then((data) => {
 			successToast('Empresa alocada com sucesso!');
-			handleScheduleEvents();
-		}).catch((error) => {
+		}).then(handleScheduleEvents)
+		.catch((error) => {
 			errorToast(error?.message);
 		}).finally(() => {
-			loading.value = false;
-			waitForCalendarToDrag();
 			hideDialog();
+			waitForCalendarToDrag();
+			loading.value = false;
 		})
 	}
 	const handleCreate = async () => {
@@ -422,16 +422,17 @@
 
 	const handleDelete = () => {
 		loading.value = true;
-		deleteSchedule(scheduleToDelete.value).then((data) => {
+		deleteSchedule(scheduleToDelete.value)
+		.then((data) => {
 			successToast('Agendamento excluido com sucesso!');
-			handleScheduleEvents();
-		}).catch((error) => {
+		}).then(handleScheduleEvents)
+		.catch((error) => {
 			errorToast(error?.message);
 		}).finally(() => {
 			scheduleToDelete.value = null;
-			loading.value = false;
-			waitForCalendarToDrag();
 			hideDialog();
+			waitForCalendarToDrag();
+			loading.value = false;
 		})
 	}
 
@@ -441,17 +442,15 @@
 		handleScheduleEvents()
 		.then(handleCompaniesSelect)
 		.then(handleLocationsSelect)
-		.then(() => {
-			waitForCalendarToDrag()
-			.catch(()=> errorToast('Erro na renderização do calendário, altere o mês e tudo ok!'))
-		})
 		.catch(error => { errorToast(error?.message); })
-		.finally(() => { 
-			loading.value = false; 
+		.finally(() => {
+			waitForCalendarToDrag()
+			.catch(()=> errorToast('Erro na renderização do calendário, altere o mês e tudo ok!'));
+			loading.value = false;
 		});
     })
 
-	const waitForCalendarToDrag = (maxAttempts = 30, interval = 100) => {
+	const waitForCalendarToDrag = async (maxAttempts = 30, interval = 100) => {
 		const selector = classDOMCalendarComponent;
 
 		return new Promise((resolve, reject) => {
@@ -492,7 +491,7 @@
 					day.addEventListener("dragleave", handleDragLeave);
 					day.addEventListener("drop", handleDrop);
 				});
-			}, 500);
+			}, 300);
 		});
 	};
 	const onDragStart = (company) => {
