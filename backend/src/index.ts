@@ -29,12 +29,14 @@ app.use('/api', companyRoutes);
 app.use('/api', locationRoutes);
 app.use('/api', scheduleRoutes);
 
-// Rota de teste
-app.get('/', (req, res) => {
+// Rota raiz de “viva-voz”
+app.get('/', (_req, res) => {
   res.send('API do Calendário de Alocação funcionando!');
 });
 
-// Iniciar servidor
+// // Só chama .listen() se for invocado como “node dist/index.js”
+// if (require.main === module) {
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
+// }

@@ -62,5 +62,11 @@
 # Yarn Integrity file
 **.yarn-integrity
 
-# electron
-**dist_electron
+# fly.io
+fly
+**fly.toml
+
+# Firebase
+.firebase
+**firebase-debug.log*
+**firebase-debug.*.log

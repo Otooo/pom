@@ -29,8 +29,7 @@
                 </div>
             </template>
             
-            <template #empty> Nenhuma companhia encontrada. </template>
-            <template #loading> Carregando Companhias... Por favor aguarde. </template>
+            <template #empty> Nenhuma empresa encontrada. </template>
 
             <Column field="name" header="Name" style="min-width: 12rem">
                 <template #body="{ data }">

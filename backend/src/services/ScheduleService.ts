@@ -4,47 +4,51 @@ import { v4 as uuidv4 } from 'uuid';
 import { DATA_NOT_FOUND_ERROR, DATA_REQUIRED_ERROR } from '../utils/error';
 import { Company } from '../models/Company';
 import { Location } from '../models/Location';
+import { DB_COLLECTION } from '../types/db_collection.enum';
 
-const SERVICE = new DataService<Schedule>(Schedule);
+const SERVICE = new DataService<Schedule>(DB_COLLECTION.SCHEDULE);
 
-const COMPANY_SERVICE = new DataService<Company>(Company);
-const LOCATION_SERVICE = new DataService<Location>(Location);
+const COMPANY_SERVICE = new DataService<Company>(DB_COLLECTION.COMPANY);
+const LOCATION_SERVICE = new DataService<Location>(DB_COLLECTION.LOCATION);
 
 export const ScheduleService = {
-    index: (): Promise<Schedule[]> => {
-        const schedules = SERVICE.getAll();
+    index: async (): Promise<Schedule[]> => {
+        const schedules = await SERVICE.getAll();
 
-        schedules.map(schedule => {
-            schedule.company = COMPANY_SERVICE.getById(schedule.company_id) as Company;
-            schedule.location = LOCATION_SERVICE.getById(schedule.location_id) as Location;
-        })
-        
-        return new Promise((resolve) => resolve(schedules as Schedule[]));
+        await Promise.all(
+            schedules.map(async (schedule) => {
+                schedule.company = await COMPANY_SERVICE.getById(schedule.company_id) as Company;
+                schedule.location = await LOCATION_SERVICE.getById(schedule.location_id) as Location;
+            })
+        );
+
+        return schedules;
     },
     
-    find: (id: string | number): Promise<Schedule | null> => {
-        const schedule = SERVICE.getById(id);
+    find: async (id: string | number): Promise<Schedule | null> => {
+        const schedule = await SERVICE.getById(id);
         
         if (!schedule) {
             DATA_NOT_FOUND_ERROR('Agenda não encontrada')
         }
         
-        return new Promise((resolve) => resolve(schedule));
+        return schedule;
     },
     
-    filter: (filters: any): Promise<Schedule[]> => {
+    filter: async (filters: any): Promise<Schedule[]> => {
         const { date } = filters; // formato YYYY-MM-DD
         
-        let schedules = SERVICE.getAll();
+        let schedules = await SERVICE.getAll();
+        
         
         if (date) {
             schedules = schedules.filter(s => s.date === date);
         }
         
-        return new Promise((resolve) => resolve(schedules));
+        return schedules;
     },
 
-    create: (data: Omit<Schedule, 'id'>): Promise<Schedule> => {
+    create: async (data: Omit<Schedule, 'id'>): Promise<Schedule> => {
 		const { date, shift, company_id, location_id } = data;
 		
 		if (!date || !shift || !company_id || !location_id) {
@@ -56,43 +60,42 @@ export const ScheduleService = {
             ...data
         };
         
-        const schedule = SERVICE.create(newSchedule);
-		
-		return new Promise((resolve) => resolve(schedule));
+        return await SERVICE.create(newSchedule);
 	},
     
-    update: (id: string | number, data: Partial<Schedule>): Promise<Schedule | null> => {
-        
-        const updated = SERVICE.update(id, data);
+    update: async (id: string | number, data: Partial<Schedule>): Promise<Schedule | null> => {
+        const updated = await SERVICE.update(id, data);
     
         if (!updated) {
             DATA_NOT_FOUND_ERROR('Agenda não encontrada')
         }
             
-        return new Promise((resolve) => resolve(updated));
+        return updated;
     },
     
-    delete: (id: string | number): Promise<boolean> => {
-        const deleted = SERVICE.delete(id);
+    delete: async (id: string | number): Promise<boolean> => {
+        const deleted = await SERVICE.delete(id);
         
         if (!deleted) {
             DATA_NOT_FOUND_ERROR('Agenda não encontrada')
         }
         
-        return new Promise((resolve) => resolve(deleted));
+        return deleted;
     },
 
-    generateDataToMsg: (monthYear: string): any => {
+    generateDataToMsg: async (monthYear: string): Promise<any> => {
         if (monthYear.length !== 7) {
             DATA_REQUIRED_ERROR('Mês e ano devem ser informado');
         }
 
-        let schedules = SERVICE.getAll();
+        let schedules = await SERVICE.getAll();
         schedules = schedules.filter(s => s.date.substring(0, 7) === monthYear);
-        schedules.map(schedule => {
-            schedule.company = COMPANY_SERVICE.getById(schedule.company_id) as Company;
-            schedule.location = LOCATION_SERVICE.getById(schedule.location_id) as Location;
-        })
+        await Promise.all(
+            schedules.map(async (schedule) => {
+                schedule.company = await COMPANY_SERVICE.getById(schedule.company_id) as Company;
+                schedule.location = await LOCATION_SERVICE.getById(schedule.location_id) as Location;
+            })
+        );
 
         const groupedSchedules = schedules.reduce((acc: any, schedule: Schedule) => {
         	const key = schedule.company_id;

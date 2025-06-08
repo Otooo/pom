@@ -8,3 +8,8 @@ export const enum HTTP_CODE {
     NOT_FOUND             = 404,
     INTERNAL_SERVER_ERROR = 500,
 }
+
+export const HTTP_CODE_IS_VALID = (code: number): boolean => {
+    const codes = [200,201,204,400,401,403,404,500];
+    return codes.includes(code);
+}

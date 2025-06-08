@@ -1,80 +1,46 @@
-import fs from 'fs';
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-import { User } from '../models/User';
-import { Company } from '../models/Company';
-import { Location } from '../models/Location';
-import { Schedule } from '../models/Schedule';
+import redis from '../config/redis';
 
-const DB_PATH = path.join(__dirname, '../../data');
-const USERS_FILE = path.join(DB_PATH, 'users.json');
-const COMPANIES_FILE = path.join(DB_PATH, 'companies.json');
-const LOCATIONS_FILE = path.join(DB_PATH, 'locations.json');
-const SCHEDULES_FILE = path.join(DB_PATH, 'schedules.json');
+export const db = {
 
-// Garante que o diretório de dados existe
-if (!fs.existsSync(DB_PATH)) {
-  fs.mkdirSync(DB_PATH, { recursive: true });
+  ensureDbExists: async () => {
+    await redis.connect();
+  },
+
+  // Ler o banco de dados
+  readAll: async (keyCollection: string): Promise<any[]> => {
+    const ids = await redis.sMembers(`${keyCollection}:index`);
+    if (!ids) return [];
+    
+    const items = await Promise.all(
+      (ids as string[]).map(async (id) => {
+        const raw = await redis.get(`${keyCollection}:${id}`);
+        return raw ? JSON.parse(raw) : null;
+      })
+    );
+
+    return items;
+  },
+
+  readDb: async (keyCollection: string, key: string): Promise<any | null> => {
+    const result = await redis.get(`${keyCollection}:${key}`);
+    
+    return !!result? JSON.parse(result) : null;
+  },
+
+  // Escrever no banco de dados
+  writeDb: async (keyCollection: string, key:string, data: any): Promise<any> => {
+    const item = JSON.stringify(data, null, 2);
+    await redis.set(`${keyCollection}:${key}`, item);
+    await redis.sAdd(`${keyCollection}:index`, key);
+
+    return await db.readDb(keyCollection, key);
+  },
+
+  // Remove no banco de dados
+  deleteDb: async (keyCollection: string, key: string): Promise<boolean> => {
+    const result = await redis.del(key);
+    await redis.sRem(`${keyCollection}:index`, key);
+    
+    return result === 1;
+  },
 }
-
-// Inicializa arquivos de banco de dados se não existirem
-export function initializeDatabase() {
-  // Inicializa usuários com um usuário padrão (bypass de login)
-  if (!fs.existsSync(USERS_FILE)) {
-    const defaultUser: User = {
-      id: uuidv4(),
-      name: 'Admin User',
-      login: 'admin',
-      password: 'admin123' // Em produção, usaríamos hash
-    };
-    fs.writeFileSync(USERS_FILE, JSON.stringify([defaultUser], null, 2));
-  }
-
-  // Inicializa outros arquivos
-  if (!fs.existsSync(COMPANIES_FILE)) {
-    fs.writeFileSync(COMPANIES_FILE, JSON.stringify([], null, 2));
-  }
-
-  if (!fs.existsSync(LOCATIONS_FILE)) {
-    fs.writeFileSync(LOCATIONS_FILE, JSON.stringify([], null, 2));
-  }
-
-  if (!fs.existsSync(SCHEDULES_FILE)) {
-    fs.writeFileSync(SCHEDULES_FILE, JSON.stringify([], null, 2));
-  }
-}
-
-// Funções genéricas para manipulação do banco de dados
-export function readData<T>(filePath: string): T[] {
-  try {
-    const data = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(data) as T[];
-  } catch (error) {
-    return [];
-  }
-}
-
-export function writeData<T>(filePath: string, data: T[]): void {
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-}
-
-// Exporta funções específicas para cada entidade
-export const usersDB = {
-  getAll: () => readData<User>(USERS_FILE),
-  save: (users: User[]) => writeData<User>(USERS_FILE, users)
-};
-
-export const companiesDB = {
-  getAll: () => readData<Company>(COMPANIES_FILE),
-  save: (companies: Company[]) => writeData<Company>(COMPANIES_FILE, companies)
-};
-
-export const locationsDB = {
-  getAll: () => readData<Location>(LOCATIONS_FILE),
-  save: (locations: Location[]) => writeData<Location>(LOCATIONS_FILE, locations)
-};
-
-export const schedulesDB = {
-  getAll: () => readData<Schedule>(SCHEDULES_FILE),
-  save: (schedules: Schedule[]) => writeData<Schedule>(SCHEDULES_FILE, schedules)
-};

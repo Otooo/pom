@@ -1,0 +1,26 @@
+# fly.toml app configuration file generated for pom-api on 2025-06-07T23:11:04-03:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'pom-api'
+primary_region = 'gru'
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  REDIS_URL="redis://localhost:6379"
+
+[http_service]
+  internal_port = 9009
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
