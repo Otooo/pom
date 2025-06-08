@@ -38,7 +38,7 @@ export const db = {
 
   // Remove no banco de dados
   deleteDb: async (keyCollection: string, key: string): Promise<boolean> => {
-    const result = await redis.del(key);
+    const result = await redis.del(`${keyCollection}:${key}`);
     await redis.sRem(`${keyCollection}:index`, key);
     
     return result === 1;

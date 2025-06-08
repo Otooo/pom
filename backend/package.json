@@ -10,7 +10,7 @@
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
     "build": "tsc",
-    "deploy:fly": "npm run fly deploy",
+    "deploy": "npm run fly deploy",
     "fly": "../fly/bin/flyctl"
   },
   "keywords": [],

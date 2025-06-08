@@ -45,7 +45,6 @@
 		<Qalendar 
 			:events="schedules"
 			:config="config"
-			:is-loading="loading"
 			:selected-date="selectedDate"
 			@updated-period="() => setupDropListeners()"
 			@date-was-clicked="onCreateEvent"
@@ -291,49 +290,49 @@
 	/** METHODS */
 	const handleScheduleEvents = async () => {
 		const tempSchedules = [];
-        fetchSchedules().then((data) => {
-			data.forEach(schedule => {
-				tempSchedules.push({
-					id: schedule.id,
-					title: `${schedule.company.name} - ${schedule.location.name} - ${shiftResolve(schedule.shift)}`,
-					time: { start: schedule.date, end: schedule.date },
-					topic: shiftResolve(schedule.shift),
-					location: schedule.location.name,
-					with: schedule.company.name,
-					colorScheme: schedule.shift,
-					isEditable: true,
-					item: schedule,
-				})
+        
+		const data = await fetchSchedules();
+		data.forEach(schedule => {
+			tempSchedules.push({
+				id: schedule.id,
+				title: `${schedule.company.name} - ${schedule.location.name} - ${shiftResolve(schedule.shift)}`,
+				time: { start: schedule.date, end: schedule.date },
+				topic: shiftResolve(schedule.shift),
+				location: schedule.location.name,
+				with: schedule.company.name,
+				colorScheme: schedule.shift,
+				isEditable: true,
+				item: schedule,
 			})
+		})
 
-			schedules.value = tempSchedules;
-        })
+		schedules.value = tempSchedules;
 	}
 
 	const handleCompaniesSelect = async () => {
 		companies.value = [];
-        fetchCompanies().then((data) => {
-            data.map(company => {
-				companies.value.push({
-					name: company.name,
-					code: company.id,
-					item: company
-				})
+        
+		const data = await fetchCompanies();
+		data.forEach(company => {
+			companies.value.push({
+				name: company.name,
+				code: company.id,
+				item: company
 			})
-        })
+		});
 	}
 	
 	const handleLocationsSelect = async () => {
 		locations.value = [];
-        fetchLocations().then((data) => {
-            data.map(location => {
-				locations.value.push({
-					name: location.name,
-					code: location.id,
-					item: location
-				})
+
+        const data = await fetchLocations();
+		data.forEach(location => {
+			locations.value.push({
+				name: location.name,
+				code: location.id,
+				item: location
 			})
-        })
+		})
 	}
 
 	const hideDialog = () => {
@@ -390,8 +389,8 @@
 		}).catch((error) => {
 			errorToast(error?.message);
 		}).finally(() => {
-			setupDropListeners();
 			loading.value = false;
+			waitForCalendarToDrag();
 			hideDialog();
 		})
 	}
@@ -409,8 +408,8 @@
 		}).catch((error) => {
 			errorToast(error?.message);
 		}).finally(() => {
-			setupDropListeners();
 			loading.value = false;
+			waitForCalendarToDrag();
 			hideDialog();
 		})
 	}
@@ -429,9 +428,9 @@
 		}).catch((error) => {
 			errorToast(error?.message);
 		}).finally(() => {
-			// setupDropListeners();
-			scheduleToDelete
+			scheduleToDelete.value = null;
 			loading.value = false;
+			waitForCalendarToDrag();
 			hideDialog();
 		})
 	}
@@ -442,38 +441,59 @@
 		handleScheduleEvents()
 		.then(handleCompaniesSelect)
 		.then(handleLocationsSelect)
-		.then(() => nextTick())
-		.then(() => setupDropListeners())
+		.then(() => {
+			waitForCalendarToDrag()
+			.catch(()=> errorToast('Erro na renderização do calendário, altere o mês e tudo ok!'))
+		})
 		.catch(error => { errorToast(error?.message); })
-		.finally(() => { loading.value = false; });
+		.finally(() => { 
+			loading.value = false; 
+		});
     })
 
-	const setupDropListeners = (retries = 2) => {
-		setTimeout(() => {
-			const dayElements = document.querySelectorAll(classDOMCalendarComponent);
-			
-			if (!dayElements.length) {
-				if (retries > 0) {
-					nextTick(() => {
-						setupDropListeners(retries - 1);
-					});
+	const waitForCalendarToDrag = (maxAttempts = 30, interval = 100) => {
+		const selector = classDOMCalendarComponent;
+
+		return new Promise((resolve, reject) => {
+			let attempts = 0;
+
+			const check = () => {
+				const el = document.querySelector(selector);
+				if (el) {
+					setupDropListeners();
+					resolve(el);
+				} else {
+					attempts++;
+					if (attempts >= maxAttempts) {
+						reject(`Elemento ${selector} não encontrado após ${maxAttempts} tentativas.`);
+					} else {
+						setTimeout(check, interval);
+					}
 				}
-				return;
 			};
 
-			dayElements.forEach((day) => {
-				day.removeEventListener("dragover", handleDragOver);
-				day.removeEventListener("dragenter", handleDragEnter);
-				day.removeEventListener("dragleave", handleDragLeave);
-				day.removeEventListener("drop", handleDrop);
-				
-				day.addEventListener("dragover", handleDragOver);
-				day.addEventListener("dragenter", handleDragEnter);
-				day.addEventListener("dragleave", handleDragLeave);
-				day.addEventListener("drop", handleDrop);
-			});
-		}, 350);
+			check();
+		});
+	}
 
+	const setupDropListeners = () => {
+		nextTick(() => {
+			setTimeout(() => {
+				const dayElements = document.querySelectorAll(classDOMCalendarComponent);
+
+				dayElements.forEach((day) => {
+					day.removeEventListener("dragover", handleDragOver);
+					day.removeEventListener("dragenter", handleDragEnter);
+					day.removeEventListener("dragleave", handleDragLeave);
+					day.removeEventListener("drop", handleDrop);
+					
+					day.addEventListener("dragover", handleDragOver);
+					day.addEventListener("dragenter", handleDragEnter);
+					day.addEventListener("dragleave", handleDragLeave);
+					day.addEventListener("drop", handleDrop);
+				});
+			}, 500);
+		});
 	};
 	const onDragStart = (company) => {
 		draggedCompany.value = company.code;
