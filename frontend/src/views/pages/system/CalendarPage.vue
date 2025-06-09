@@ -549,7 +549,11 @@
 		let text = `\n`;
 		Object.entries(data).forEach(([key, items]) => {
 			text += `${items[0].companyName}\n`;
-			items.forEach(value => {
+			const sortedItems = items.sort((prev, next) => {
+				return prev.date.localeCompare(next.date); // asc
+			});
+
+			sortedItems.forEach(value => {
 				text += `${format(parseISO(value.date), 'dd/MM')} - ${value.locationName} (${shiftResolve(value.shift)})\n`
 			})
 			text += '\n';
