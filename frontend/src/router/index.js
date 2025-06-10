@@ -1,8 +1,14 @@
 import AppLayout from '@/layout/AppLayout.vue';
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router';
+
+function chooseHistory() {
+    return import.meta.env.VITE_MODE == 'desktop'
+        ? createWebHashHistory()
+        : createWebHistory();
+}
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: chooseHistory(),
     routes: [
         {
             path: '/',

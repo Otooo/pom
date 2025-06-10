@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd());
 
     return {
+        base: './',
         optimizeDeps: {
             noDiscovery: true
         },
@@ -28,10 +29,13 @@ export default defineConfig(({ mode }) => {
         server: {
             proxy: {
                 '/api': {
-                    target: env.VITE_API_URL,
+                    target: env.VITE_API_BASE_URL,
                     changeOrigin: true,
                 },
             },
-        }
+        },
+        // build: {
+        //     chunkSizeWarningLimit: 2000 // Valor em kB (2000kB = 2MB)
+        // }
     };
 });

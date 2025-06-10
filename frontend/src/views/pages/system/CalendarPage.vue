@@ -5,7 +5,7 @@
 		<Loading :loading="loading" loadingText="Processando Requisição..." />
 
 		<!-- Drag Drop Companies & Export MSGs -->
-		<Toolbar class="mb-6">
+		<Toolbar v-if="companies.length" class="mb-6">
 			<template #start>
 				<div>
 					<div class="font-semibold text-xl mb-2">Empresas disponíveis</div>
@@ -45,7 +45,6 @@
 		<Qalendar 
 			:events="schedules"
 			:config="config"
-			:is-loading="loading"
 			:selected-date="selectedDate"
 			@updated-period="() => setupDropListeners()"
 			@date-was-clicked="onCreateEvent"
@@ -196,7 +195,7 @@
 	import { useNotify } from '@/composables/useNotify';
 	import { format, parseISO } from 'date-fns';
 	import { ptBR } from 'date-fns/locale';
-import { shiftResolve } from '@/utils/timeUtil';
+	import { shiftResolve } from '@/utils/timeUtil';
 
 	/** CONSTANTS */
     const { successToast, errorToast } = useNotify();
@@ -288,54 +287,52 @@ import { shiftResolve } from '@/utils/timeUtil';
 		return form.value.id? 'Editar' : 'Adicionar';
 	});
 
-
 	/** METHODS */
 	const handleScheduleEvents = async () => {
 		const tempSchedules = [];
-        fetchSchedules().then((data) => {
-			data.forEach(schedule => {
-				tempSchedules.push({
-					id: schedule.id,
-					title: `${schedule.company.name} - ${schedule.location.name} - ${schedule.shift}`,
-					time: { start: schedule.date, end: schedule.date },
-					topic: schedule.shift,
-					// description: `${schedule.company.name} - ${schedule.location.name} - ${schedule.shift}`,
-					location: schedule.location.name,
-					with: schedule.company.name,
-					colorScheme: schedule.shift,
-					isEditable: true,
-					item: schedule,
-				})
+        
+		const data = await fetchSchedules();
+		data.forEach(schedule => {
+			tempSchedules.push({
+				id: schedule.id,
+				title: `${schedule.company.name} - ${schedule.location.name} - ${shiftResolve(schedule.shift)}`,
+				time: { start: schedule.date, end: schedule.date },
+				topic: shiftResolve(schedule.shift),
+				location: schedule.location.name,
+				with: schedule.company.name,
+				colorScheme: schedule.shift,
+				isEditable: true,
+				item: schedule,
 			})
+		})
 
-			schedules.value = tempSchedules;
-        })
+		schedules.value = tempSchedules;
 	}
 
 	const handleCompaniesSelect = async () => {
 		companies.value = [];
-        fetchCompanies().then((data) => {
-            data.map(company => {
-				companies.value.push({
-					name: company.name,
-					code: company.id,
-					item: company
-				})
+        
+		const data = await fetchCompanies();
+		data.forEach(company => {
+			companies.value.push({
+				name: company.name,
+				code: company.id,
+				item: company
 			})
-        })
+		});
 	}
 	
 	const handleLocationsSelect = async () => {
 		locations.value = [];
-        fetchLocations().then((data) => {
-            data.map(location => {
-				locations.value.push({
-					name: location.name,
-					code: location.id,
-					item: location
-				})
+
+        const data = await fetchLocations();
+		data.forEach(location => {
+			locations.value.push({
+				name: location.name,
+				code: location.id,
+				item: location
 			})
-        })
+		})
 	}
 
 	const hideDialog = () => {
@@ -388,13 +385,13 @@ import { shiftResolve } from '@/utils/timeUtil';
 
 		handleEdit().then((data) => {
 			successToast('Empresa alocada com sucesso!');
-			handleScheduleEvents();
-		}).catch((error) => {
+		}).then(handleScheduleEvents)
+		.catch((error) => {
 			errorToast(error?.message);
 		}).finally(() => {
-			setupDropListeners();
-			loading.value = false;
 			hideDialog();
+			waitForCalendarToDrag();
+			loading.value = false;
 		})
 	}
 
@@ -407,13 +404,13 @@ import { shiftResolve } from '@/utils/timeUtil';
 
 		action().then((data) => {
 			successToast('Empresa alocada com sucesso!');
-			handleScheduleEvents();
-		}).catch((error) => {
+		}).then(handleScheduleEvents)
+		.catch((error) => {
 			errorToast(error?.message);
 		}).finally(() => {
-			setupDropListeners();
-			loading.value = false;
 			hideDialog();
+			waitForCalendarToDrag();
+			loading.value = false;
 		})
 	}
 	const handleCreate = async () => {
@@ -425,63 +422,77 @@ import { shiftResolve } from '@/utils/timeUtil';
 
 	const handleDelete = () => {
 		loading.value = true;
-		deleteSchedule(scheduleToDelete.value).then((data) => {
+		deleteSchedule(scheduleToDelete.value)
+		.then((data) => {
 			successToast('Agendamento excluido com sucesso!');
-			handleScheduleEvents();
-		}).catch((error) => {
+		}).then(handleScheduleEvents)
+		.catch((error) => {
 			errorToast(error?.message);
 		}).finally(() => {
-			// setupDropListeners();
-			scheduleToDelete
-			loading.value = false;
+			scheduleToDelete.value = null;
 			hideDialog();
+			waitForCalendarToDrag();
+			loading.value = false;
 		})
 	}
 
-	onMounted(async () => {
+	onMounted(() => {
         loading.value = true;
-		try {
-			await handleScheduleEvents();
-			await handleCompaniesSelect();
-			await handleLocationsSelect();
-			
-			await nextTick();
-			setupDropListeners();
-        
-			successToast('Itens carregados com sucesso!');
-		} catch (error) {
-			errorToast(error?.message);
-		} finally {
+		
+		handleScheduleEvents()
+		.then(handleCompaniesSelect)
+		.then(handleLocationsSelect)
+		.catch(error => { errorToast(error?.message); })
+		.finally(() => {
+			waitForCalendarToDrag()
+			.catch(()=> errorToast('Erro na renderização do calendário, altere o mês e tudo ok!'));
 			loading.value = false;
-		}
+		});
     })
 
-	const setupDropListeners = (retries = 2) => {
-		setTimeout(() => {
-			const dayElements = document.querySelectorAll(classDOMCalendarComponent);
-			
-			if (!dayElements.length) {
-				if (retries > 0) {
-					nextTick(() => {
-						setupDropListeners(retries - 1);
-					});
+	const waitForCalendarToDrag = async (maxAttempts = 30, interval = 100) => {
+		const selector = classDOMCalendarComponent;
+
+		return new Promise((resolve, reject) => {
+			let attempts = 0;
+
+			const check = () => {
+				const el = document.querySelector(selector);
+				if (el) {
+					setupDropListeners();
+					resolve(el);
+				} else {
+					attempts++;
+					if (attempts >= maxAttempts) {
+						reject(`Elemento ${selector} não encontrado após ${maxAttempts} tentativas.`);
+					} else {
+						setTimeout(check, interval);
+					}
 				}
-				return;
 			};
 
-			dayElements.forEach((day) => {
-				day.removeEventListener("dragover", handleDragOver);
-				day.removeEventListener("dragenter", handleDragEnter);
-				day.removeEventListener("dragleave", handleDragLeave);
-				day.removeEventListener("drop", handleDrop);
-				
-				day.addEventListener("dragover", handleDragOver);
-				day.addEventListener("dragenter", handleDragEnter);
-				day.addEventListener("dragleave", handleDragLeave);
-				day.addEventListener("drop", handleDrop);
-			});
-		}, 350);
+			check();
+		});
+	}
 
+	const setupDropListeners = () => {
+		nextTick(() => {
+			setTimeout(() => {
+				const dayElements = document.querySelectorAll(classDOMCalendarComponent);
+
+				dayElements.forEach((day) => {
+					day.removeEventListener("dragover", handleDragOver);
+					day.removeEventListener("dragenter", handleDragEnter);
+					day.removeEventListener("dragleave", handleDragLeave);
+					day.removeEventListener("drop", handleDrop);
+					
+					day.addEventListener("dragover", handleDragOver);
+					day.addEventListener("dragenter", handleDragEnter);
+					day.addEventListener("dragleave", handleDragLeave);
+					day.addEventListener("drop", handleDrop);
+				});
+			}, 300);
+		});
 	};
 	const onDragStart = (company) => {
 		draggedCompany.value = company.code;
@@ -538,7 +549,11 @@ import { shiftResolve } from '@/utils/timeUtil';
 		let text = `\n`;
 		Object.entries(data).forEach(([key, items]) => {
 			text += `${items[0].companyName}\n`;
-			items.forEach(value => {
+			const sortedItems = items.sort((prev, next) => {
+				return prev.date.localeCompare(next.date); // asc
+			});
+
+			sortedItems.forEach(value => {
 				text += `${format(parseISO(value.date), 'dd/MM')} - ${value.locationName} (${shiftResolve(value.shift)})\n`
 			})
 			text += '\n';
