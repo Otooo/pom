@@ -62,9 +62,8 @@
 # Yarn Integrity file
 **.yarn-integrity
 
-# fly.io
-fly
-**fly.toml
+# railway
+**secrets.toml
 
 # Firebase
 .firebase

@@ -1,0 +1,34 @@
+name: Deploy Frontend to Firebase
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: 📥 Checkout do código
+        uses: actions/checkout@v3
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.19'
+
+      - name: 📦 Instalar dependências
+        run: npm install
+
+      - name: 🔥 Deploy para Firebase Hosting
+        run: npm run deploy
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_POM_HABIT }}
+          VITE_API_URL: /api
+          VITE_API_BASE_URL: https://pom-api-production.up.railway.app
