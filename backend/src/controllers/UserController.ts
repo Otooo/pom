@@ -2,19 +2,20 @@ import { Request, Response } from 'express';
 import { DataService } from '../services/DataService';
 import { User } from '../models/User';
 import { v4 as uuidv4 } from 'uuid';
+import { DB_COLLECTION } from '../types/db_collection.enum';
 
-const userService = new DataService<User>('users');
+const userService = new DataService<User>(DB_COLLECTION.USER);
 
 export const UserController = {
-  getAllUsers: (req: Request, res: Response) => {
-    const users = userService.getAll();
+  getAllUsers: async (req: Request, res: Response) => {
+    const users = await userService.getAll();
     // Não retornar as senhas
     const safeUsers = users.map(({ password, ...user }) => user);
     res.json(safeUsers);
   },
 
-  getUserById: (req: Request, res: Response) => {
-    const user = userService.getById(req.params.id);
+  getUserById: async (req: Request, res: Response) => {
+    const user = await userService.getById(req.params.id);
     if (!user) {
       return res.status(404).json({ message: 'Usuário não encontrado' });
     }
@@ -23,7 +24,7 @@ export const UserController = {
     res.json(safeUser);
   },
 
-  createUser: (req: Request, res: Response) => {
+  createUser: async (req: Request, res: Response) => {
     const { name, login, password } = req.body;
     
     if (!name || !login || !password) {
@@ -37,13 +38,13 @@ export const UserController = {
       password // Em um sistema real, deveria ser criptografado
     };
     
-    const user = userService.create(newUser);
+    const user = await userService.create(newUser);
     const { password: _, ...safeUser } = user;
     res.status(201).json(safeUser);
   },
 
-  updateUser: (req: Request, res: Response) => {
-    const updatedUser = userService.update(req.params.id, req.body);
+  updateUser: async (req: Request, res: Response) => {
+    const updatedUser = await userService.update(req.params.id, req.body);
     
     if (!updatedUser) {
       return res.status(404).json({ message: 'Usuário não encontrado' });
@@ -53,8 +54,8 @@ export const UserController = {
     res.json(safeUser);
   },
 
-  deleteUser: (req: Request, res: Response) => {
-    const deleted = userService.delete(req.params.id);
+  deleteUser: async (req: Request, res: Response) => {
+    const deleted = await userService.delete(req.params.id);
     
     if (!deleted) {
       return res.status(404).json({ message: 'Usuário não encontrado' });
@@ -63,14 +64,14 @@ export const UserController = {
     res.status(204).send();
   },
 
-  login: (req: Request, res: Response) => {
+  login: async (req: Request, res: Response) => {
     const { login, password } = req.body;
     
     if (!login || !password) {
       return res.status(400).json({ message: 'Login e senha são obrigatórios' });
     }
     
-    const users = userService.getAll();
+    const users = await userService.getAll();
     const user = users.find(u => u.login === login && u.password === password);
     
     if (!user) {
@@ -85,8 +86,8 @@ export const UserController = {
     });
   },
 
-  bypassLogin: (req: Request, res: Response) => {
-    const users = userService.getAll();
+  bypassLogin: async (req: Request, res: Response) => {
+    const users = await userService.getAll();
     
     if (users.length === 0) {
       return res.status(404).json({ message: 'Nenhum usuário encontrado para bypass' });

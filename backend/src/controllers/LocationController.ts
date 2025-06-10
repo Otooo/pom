@@ -1,60 +1,70 @@
 import { Request, Response } from 'express';
-import { DataService } from '../services/DataService';
-import { Location } from '../models/Location';
-import { v4 as uuidv4 } from 'uuid';
-
-const locationService = new DataService<Location>('locations');
+import { HTTP_CODE, HTTP_CODE_IS_VALID } from '../types/http_code.enum';
+import { LocationService } from '../services/LocationService';
 
 export const LocationController = {
-  getAllLocations: (req: Request, res: Response) => {
-    const locations = locationService.getAll();
-    res.json(locations);
-  },
+    getAllLocations: async (req: Request, res: Response) => {
+        try {
+            const locations = await LocationService.index();
 
-  getLocationById: (req: Request, res: Response) => {
-    const location = locationService.getById(req.params.id);
+            return res.status(HTTP_CODE.SUCCESS).json(locations);
+        } catch (error: any) {
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
     
-    if (!location) {
-      return res.status(404).json({ message: 'Local não encontrado' });
+    getLocationById: async (req: Request, res: Response) => {
+        try {
+            const location = await LocationService.find(req.params.id);
+        
+            return res.status(HTTP_CODE.SUCCESS).json(location);
+        } catch (error: any) {
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
+    
+    createLocation: async (req: Request, res: Response) => {
+        try {
+            const location = await LocationService.create(req.body);
+            
+            return res.status(HTTP_CODE.CREATED).json(location);
+        } catch (error: any) {
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
+    
+    updateLocation: async (req: Request, res: Response) => {
+        try {
+            const updatedLocation = await LocationService.update(req.params.id, req.body);
+        
+            return res.status(HTTP_CODE.SUCCESS).json(updatedLocation);
+        } catch (error: any) {
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
+    
+    deleteLocation: async (req: Request, res: Response) => {
+        try {
+            await LocationService.delete(req.params.id);
+            
+            return res.status(HTTP_CODE.NO_CONTENT).send();
+        } catch (error: any) {
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
     }
-    
-    res.json(location);
-  },
-
-  createLocation: (req: Request, res: Response) => {
-    const { name, address } = req.body;
-    
-    if (!name || !address) {
-      return res.status(400).json({ message: 'Nome e endereço são obrigatórios' });
-    }
-    
-    const newLocation: Location = {
-      id: uuidv4(),
-      name,
-      address
-    };
-    
-    const location = locationService.create(newLocation);
-    res.status(201).json(location);
-  },
-
-  updateLocation: (req: Request, res: Response) => {
-    const updatedLocation = locationService.update(req.params.id, req.body);
-    
-    if (!updatedLocation) {
-      return res.status(404).json({ message: 'Local não encontrado' });
-    }
-    
-    res.json(updatedLocation);
-  },
-
-  deleteLocation: (req: Request, res: Response) => {
-    const deleted = locationService.delete(req.params.id);
-    
-    if (!deleted) {
-      return res.status(404).json({ message: 'Local não encontrado' });
-    }
-    
-    res.status(204).send();
-  }
 };

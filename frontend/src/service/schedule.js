@@ -1,6 +1,7 @@
-import axios from 'axios';
+import axios from '@/config/axios';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { useScheduleStore } from '@/stores/schedule';
+import { executeActionService } from './serviceBase';
 
 /** VARs */
 const API_PATH = '/schedules';
@@ -25,7 +26,11 @@ export const updateSchedule = async (id, { _id, ...schedule }) => {
 export const deleteSchedule = async (id) => {
     return executeActionService(async () => axios.delete(`${API_PATH}/${id}`))
 }
-  
+
+export const generateDataMsg = async (monthYear) => {
+    return executeActionService(async () => axios.post(`${API_PATH}/data-msg`, { monthYear } ));
+}
+
 export const calendarDays = () => {
     const scheduleStore = useScheduleStore();
     
@@ -58,4 +63,4 @@ export const calendarDays = () => {
       
     return days;
 }
-  
+ 

@@ -1,5 +1,4 @@
-export interface Company {
-  id: string;
-  name: string;
-  location_id: string;
+export class Company {
+  id!: string;
+  name!: string;
 }

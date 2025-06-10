@@ -45,11 +45,17 @@ frontend/
 
 ## Instruções de Configuração
 
-1. Clone the repository:  
-  ```bash
-  git clone https://github.com/seu-usuario/pom.git
-  cd pom
-  ```
+1. Clone o repositório:  
+  - Clonando via ssh:
+    ```bash
+    git clone git@github.com:Otooo/pom.git
+    cd pom
+    ```
+  - clonando via https:
+    ```bash
+    git clone https://github.com/Otooo/pom.git
+    cd pom
+    ```
 
 2. Instale as dependências para o backend:
   ```bash
@@ -57,17 +63,19 @@ frontend/
   npm install
   npm run dev
   
-  #O backend estará disponível em http://localhost:3000.
+  #O backend estará disponível em http://localhost:9009.
   ```
 
 3. Instale as dependências para o frontend:
   ```bash
   cd ../frontend
+  cp .env.example .env
   npm install
   npm run dev
   
   #O frontend estará disponível em http://localhost:5173.
   ``` 
+  Obs.: - No Vite, todas as variáveis de ambiente (.env) devem começar com `VITE_` para serem expostas ao código do cliente. Você pode acessar as variáveis de ambiente em qualquer componente Vue usando `import.meta.env.NOME_DA_VARIAVEL`.
 
 ## Funcionalidades Principais
 - Gerenciamento de usuários

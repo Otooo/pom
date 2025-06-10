@@ -1,8 +1,14 @@
 import AppLayout from '@/layout/AppLayout.vue';
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router';
+
+function chooseHistory() {
+    return import.meta.env.VITE_MODE == 'desktop'
+        ? createWebHashHistory()
+        : createWebHistory();
+}
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: chooseHistory(),
     routes: [
         {
             path: '/',
@@ -14,10 +20,24 @@ const router = createRouter({
                     component: () => import('@/views/Dashboard.vue')
                 },
                 {
+                    path: '/companies',
+                    name: 'companies',
+                    component: () => import('@/views/pages/system/CompaniesPage.vue')
+                },
+                {
+                    path: '/locations',
+                    name: 'locations',
+                    component: () => import('@/views/pages/system/LocationsPage.vue')
+                },
+                {
                     path: '/calendar',
                     name: 'calendar',
-                    component: () => import('@/views/pages/system/CalendarPage2.vue')
+                    component: () => import('@/views/pages/system/CalendarPage.vue')
                 },
+
+
+
+
                 {
                     path: '/uikit/formlayout',
                     name: 'formlayout',

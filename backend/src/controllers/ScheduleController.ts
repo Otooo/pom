@@ -1,96 +1,96 @@
 import { Request, Response } from 'express';
-import { DataService } from '../services/DataService';
-import { Schedule, DaySchedule, Shift } from '../models/Schedule';
-import { v4 as uuidv4 } from 'uuid';
-
-const scheduleService = new DataService<Schedule>('schedules');
+import { HTTP_CODE, HTTP_CODE_IS_VALID } from '../types/http_code.enum';
+import { ScheduleService } from '../services/ScheduleService';
 
 export const ScheduleController = {
-  getAllSchedules: (req: Request, res: Response) => {
-    const schedules = scheduleService.getAll();
-    res.json(schedules);
-  },
+    getAllSchedules: async (req: Request, res: Response) => {
+        try {
+            const schedules = await ScheduleService.index();
+            
+            return res.status(HTTP_CODE.SUCCESS).json(schedules);
+        } catch (error: any) {
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
+    
+    getScheduleById: async (req: Request, res: Response) => {
+        try {
+            const schedule = await ScheduleService.find(req.params.id);
+        
+            return res.status(HTTP_CODE.SUCCESS).json(schedule);
+        } catch (error: any) {
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
+    
+    getScheduleByDate: async (req: Request, res: Response) => {
+        try {
+            const schedules = await ScheduleService.filter(req.params);
+        
+            return res.status(HTTP_CODE.SUCCESS).json(schedules);
+        } catch (error: any) {
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
+    
+    createSchedule: async (req: Request, res: Response) => {
+        try {
+            const schedule = await ScheduleService.create(req.body);
 
-  getScheduleById: (req: Request, res: Response) => {
-    const schedule = scheduleService.getById(req.params.id);
-    
-    if (!schedule) {
-      return res.status(404).json({ message: 'Agenda não encontrada' });
-    }
-    
-    res.json(schedule);
-  },
+            return res.status(HTTP_CODE.CREATED).json(schedule);
+        } catch (error: any) {
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
 
-  getScheduleByMonth: (req: Request, res: Response) => {
-    const { month } = req.params; // formato YYYY-MM
-    const schedules = scheduleService.getAll();
-    const schedule = schedules.find(s => s.month === month);
-    
-    if (!schedule) {
-      // Se não existir, criar uma nova agenda para o mês
-      const daysInMonth = new Date(parseInt(month.split('-')[0]), parseInt(month.split('-')[1]), 0).getDate();
-      const days: DaySchedule[] = [];
-      
-      for (let i = 1; i <= daysInMonth; i++) {
-        const day = i < 10 ? `0${i}` : `${i}`;
-        days.push({
-          date: `${month}-${day}`,
-          shifts: {
-            morning: [],
-            afternoon: [],
-            night: []
-          }
-        });
-      }
-      
-      const newSchedule: Schedule = {
-        id: uuidv4(),
-        month,
-        days
-      };
-      
-      const created = scheduleService.create(newSchedule);
-      return res.json(created);
-    }
-    
-    res.json(schedule);
-  },
+    updateSchedule: async (req: Request, res: Response) => {
+        try {
+            const updated = await ScheduleService.update(req.params.id, req.body);
 
-  updateDayShift: (req: Request, res: Response) => {
-    const { month, day, shift } = req.params;
-    const { companies } = req.body;
+            return res.status(HTTP_CODE.SUCCESS).json(updated);
+        } catch (error: any) {
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
     
-    if (!Array.isArray(companies)) {
-      return res.status(400).json({ message: 'Lista de empresas inválida' });
-    }
-    
-    const schedules = scheduleService.getAll();
-    let schedule = schedules.find(s => s.month === month);
-    
-    if (!schedule) {
-      return res.status(404).json({ message: 'Agenda do mês não encontrada' });
-    }
-    
-    const dayIndex = schedule.days.findIndex(d => d.date.endsWith(day));
-    
-    if (dayIndex === -1) {
-      return res.status(404).json({ message: 'Dia não encontrado' });
-    }
-    
-    // Atualizar as empresas para o turno específico
-    schedule.days[dayIndex].shifts[shift as Shift] = companies;
-    
-    const updated = scheduleService.update(schedule.id, schedule);
-    res.json(updated);
-  },
+    deleteSchedule: async (req: Request, res: Response) => {
+        try {
+            await ScheduleService.delete(req.params.id);
+           
+            return res.status(HTTP_CODE.NO_CONTENT).send();
+        } catch (error: any) {
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
 
-  deleteSchedule: (req: Request, res: Response) => {
-    const deleted = scheduleService.delete(req.params.id);
-    
-    if (!deleted) {
-      return res.status(404).json({ message: 'Agenda não encontrada' });
-    }
-    
-    res.status(204).send();
-  }
+    generateDataToMsg: async (req: Request, res: Response) => {
+        try {
+            const dataMsg = await ScheduleService.generateDataToMsg(req.body?.monthYear);
+           
+            return res.status(HTTP_CODE.SUCCESS).send(dataMsg);
+        } catch (error: any) {
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
 };
