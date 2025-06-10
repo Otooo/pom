@@ -63,7 +63,7 @@ frontend/
   npm install
   npm run dev
   
-  #O backend estará disponível em http://localhost:3000.
+  #O backend estará disponível em http://localhost:9009.
   ```
 
 3. Instale as dependências para o frontend:

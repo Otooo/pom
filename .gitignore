@@ -61,3 +61,11 @@
 
 # Yarn Integrity file
 **.yarn-integrity
+
+# railway
+**secrets.toml
+
+# Firebase
+.firebase
+**firebase-debug.log*
+**firebase-debug.*.log

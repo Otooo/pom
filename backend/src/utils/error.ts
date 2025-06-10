@@ -1,4 +1,4 @@
-import { HTTP_CODE } from "../types/http_code";
+import { HTTP_CODE } from "../types/http_code.enum";
 
 export const DATA_NOT_FOUND_ERROR = (message = "Item não encontrado") => { 
     const error = new Error(message)

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { HTTP_CODE } from '../types/http_code';
+import { HTTP_CODE, HTTP_CODE_IS_VALID } from '../types/http_code.enum';
 import { LocationService } from '../services/LocationService';
 
 export const LocationController = {
@@ -9,7 +9,9 @@ export const LocationController = {
 
             return res.status(HTTP_CODE.SUCCESS).json(locations);
         } catch (error: any) {
-            const status = error?.name ?? HTTP_CODE.INTERNAL_SERVER_ERROR;
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
             return res.status(status).json(error);
         }
     },
@@ -20,7 +22,9 @@ export const LocationController = {
         
             return res.status(HTTP_CODE.SUCCESS).json(location);
         } catch (error: any) {
-            const status = error?.name ?? HTTP_CODE.INTERNAL_SERVER_ERROR;
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
             return res.status(status).json(error);
         }
     },
@@ -31,7 +35,9 @@ export const LocationController = {
             
             return res.status(HTTP_CODE.CREATED).json(location);
         } catch (error: any) {
-            const status = error?.name ?? HTTP_CODE.INTERNAL_SERVER_ERROR;
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
             return res.status(status).json(error);
         }
     },
@@ -42,7 +48,9 @@ export const LocationController = {
         
             return res.status(HTTP_CODE.SUCCESS).json(updatedLocation);
         } catch (error: any) {
-            const status = error?.name ?? HTTP_CODE.INTERNAL_SERVER_ERROR;
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
             return res.status(status).json(error);
         }
     },
@@ -53,7 +61,9 @@ export const LocationController = {
             
             return res.status(HTTP_CODE.NO_CONTENT).send();
         } catch (error: any) {
-            const status = error?.name ?? HTTP_CODE.INTERNAL_SERVER_ERROR;
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
             return res.status(status).json(error);
         }
     }

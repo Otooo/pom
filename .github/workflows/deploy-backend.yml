@@ -1,0 +1,31 @@
+name: Deploy Backend to Railway
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: 📥 Checkout do código
+        uses: actions/checkout@v3
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.19'
+
+      - name: 🧰 Instalar dependências
+        run: npm install
+
+      - name: 🚀 Deploy para Railway
+        run: npm run deploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY }}

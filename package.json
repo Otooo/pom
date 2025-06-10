@@ -1,0 +1,12 @@
+{
+  "name": "pom",
+	"author": {
+		"name": "princess"
+	},
+	"scripts": {
+		"deploy:frontend": "cd frontend && npm run deploy",
+		"deploy:backend": "cd backend && npm run deploy:fly"
+	},
+	"description": "Aplicação de alocação de empresas para locais em determinado turno",
+	"version": "1.0.0"
+}
