@@ -2,6 +2,7 @@
     <Loading :loading="loading" loadingText="Processando Requisição..." />
 
     <div v-if="!loading" class="grid grid-cols-12 gap-8">
+        <!-- Schedules card -->
         <div class="col-span-12 lg:col-span-4 xl:col-span-4">
             <StatsWidget 
                 title="Agendamentos"
@@ -10,6 +11,7 @@
                 color="blue"
             />
         </div>
+        <!-- Companies card -->
         <div class="col-span-12 lg:col-span-4 xl:col-span-4">
             <StatsWidget 
                 title="Empresas"
@@ -18,6 +20,7 @@
                 color="orange"
             />
         </div>
+        <!-- Locations card -->
         <div class="col-span-12 lg:col-span-4 xl:col-span-4">
             <StatsWidget 
                 title="Locais"
@@ -27,16 +30,35 @@
             />
         </div>
 
-        <div class="col-span-6 xl:col-span-6">
+        <!-- List shifts card -->
+        <div class="col-span-12 xl:col-span-12">
             <ListWidget 
                 title="Turnos Alocados"
                 :data="dataShifts"
             />
         </div>
+
+        <!-- Schedules by Company Chart -->
+        <div class="col-span-6 xl:col-span-6">
+            <DonutsChartWidget 
+                title="Empresas Alocações"
+                :data="dataCompaniesSchedules"
+                :labels="labelCompanies"
+            />
+        </div>
+        <div class="col-span-6 xl:col-span-6">
+            <DonutsChartWidget 
+                title="Locais Alocações"
+                :data="dataLocationsSchedules"
+                :labels="labelLocations"
+            />
+        </div>
+
+        <!-- Locations x Companies Chart -->
         <div class="col-span-12 xl:col-span-12">
             <BarChartWidget 
-                title="Locais Alocações Emmpresas"
-                :data="dataCompanies"
+                title="Locais Alocações Empresas"
+                :data="dataCompaniesXLocations"
                 :labels="labelCompanies"
             />
         </div>
@@ -46,6 +68,7 @@
 <script setup>
 import ListWidget from '@/components/dashboard/ListWidget.vue';
 import BarChartWidget from '@/components/dashboard/BarChartWidget.vue';
+import DonutsChartWidget from '@/components/dashboard/DonutsChartWidget.vue';
 import StatsWidget from '@/components/dashboard/StatsWidget.vue';
 import { onMounted, ref, watch, computed, nextTick } from 'vue';
 import { useNotify } from '@/composables/useNotify';
@@ -64,29 +87,15 @@ import { fetchSchedules} from '@/service/schedule';
 	const locations = ref([]);
 
     /** COMPUTE & WATCH */
-	const totalSchedules = computed(() => {
-		return stats.value.totalSchedules;
-	});
-
-	const totalCompanies = computed(() => {
-		return stats.value.totalCompanies;
-	});
-
-	const totalLocations = computed(() => {
-		return stats.value.totalLocations;
-	});
-
-    const dataShifts = computed(() => {
-        return stats.value.dataShifts;
-	});
-
-    const dataCompanies = computed(() => {
-		return stats.value.dataCompanies;
-	});
-
-    const labelCompanies = computed(() => {
-        return stats.value.labelCompanies;
-	});
+	const totalSchedules = computed(() => { return stats.value.totalSchedules; });
+	const totalCompanies = computed(() => { return stats.value.totalCompanies; });
+	const totalLocations = computed(() => { return stats.value.totalLocations; });
+    const dataShifts = computed(() => { return stats.value.dataShifts; });
+    const dataCompaniesXLocations = computed(() => { return stats.value.dataCompaniesXLocations; });
+    const labelCompanies = computed(() => { return stats.value.labelCompanies; });
+    const labelLocations = computed(() => { return stats.value.labelLocations; });
+    const dataCompaniesSchedules = computed(() => { return stats.value.dataCompaniesSchedules; });
+    const dataLocationsSchedules = computed(() => { return stats.value.dataLocationsSchedules; });
 
     /** METHODS */
     const handleShiftSats = () => {
@@ -117,12 +126,18 @@ import { fetchSchedules} from '@/service/schedule';
     }
 
     const handleLabelLocations = () => {
-    	return companies.value.map((location) => {
+    	return locations.value.map((location) => {
     		return location.name;
     	})
     }
 
-    const handleDataCompanies = () => {
+    const handleLabelCompanies = () => {
+    	return companies.value.map((company) => {
+    		return company.name;
+    	})
+    }
+
+    const handleDataCompaniesXLocations = () => {
     	const data = {};
     	schedules.value.forEach((schedule) => {
             if (!data[schedule.location.name]) {
@@ -151,6 +166,46 @@ import { fetchSchedules} from '@/service/schedule';
         return result;
     }
 
+    const handleCompaniesSchedules = () => {
+    	let data = {};
+    	schedules.value.forEach((schedule) => {
+            if (!data[schedule.company.name]) {
+                data[schedule.company.name] = 0;
+            }
+            data[schedule.company.name]++;
+    	})
+
+        const result = []
+        Object.entries(data).forEach(([key, value]) => {
+            result.push({
+                label: key,
+                value
+            })
+        })
+
+        return result;
+    }
+
+    const handleLocationsSchedules = () => {
+    	let data = {};
+    	schedules.value.forEach((schedule) => {
+            if (!data[schedule.location.name]) {
+                data[schedule.location.name] = 0;
+            }
+            data[schedule.location.name]++;
+    	})
+
+        const result = []
+        Object.entries(data).forEach(([key, value]) => {
+            result.push({
+                label: key,
+                value
+            })
+        })
+
+        return result;
+    }
+
     const handleStats = async () => {
         const promises = [
             new Promise ((resolve, reject) => fetchCompanies().then((data) => { companies.value = data; resolve(); }).catch(reject)),
@@ -168,8 +223,12 @@ import { fetchSchedules} from '@/service/schedule';
 
                     dataShifts: handleShiftSats(),
                     
-                    dataCompanies: handleDataCompanies(),
-                    labelCompanies: handleLabelLocations(),
+                    dataCompaniesSchedules: handleCompaniesSchedules(),
+                    dataLocationsSchedules: handleLocationsSchedules(),
+
+                    dataCompaniesXLocations: handleDataCompaniesXLocations(),
+                    labelLocations: handleLabelLocations(),
+                    labelCompanies: handleLabelCompanies(),
                 }
 
                 resolve();
