@@ -44,6 +44,26 @@
                     <Tag value="Ativo" severity="success" />
                 </template>
             </Column>
+
+            <Column header="Ações" style="min-width: 8rem">
+                <template #body="{ data }">
+                    <Button 
+                        icon="pi pi-pencil" 
+                        severity="secondary" 
+                        text 
+                        rounded 
+                        class="mr-2" 
+                        @click="editCompany(data)" 
+                    />
+                    <Button 
+                        icon="pi pi-trash" 
+                        severity="danger" 
+                        text 
+                        rounded 
+                        @click="confirmDeleteCompany(data)" 
+                    />
+                </template>
+            </Column> 
         </DataTable>
 
         <!-- Dialog ADD/EDIT -->
@@ -65,6 +85,17 @@
                 <Button :label="addOrEditLabel" icon="pi pi-check" @click="handleSave" />
             </template>
         </Dialog>
+
+        <Dialog header="Confirmação" v-model:visible="deleteCompanyDialog" :style="{ width: '350px' }" :modal="true">
+            <div class="flex items-center justify-center">
+                <i class="pi pi-exclamation-triangle mr-4" style="font-size: 2rem" />
+                <span>Tem certeza que deseja excluir esta empresa?</span>
+            </div>
+            <template #footer>
+               <Button label="Não" icon="pi pi-times" @click="deleteCompanyDialog = false" text severity="secondary" />
+               <Button label="Sim" icon="pi pi-check" @click="handleDelete" severity="danger" outlined autofocus />
+            </template>
+        </Dialog>
     </div>
 </template>
 
@@ -81,13 +112,20 @@
 		name: '',
 	};
 
+    /** REFS */
+    const deleteCompanyDialog = ref(false);
+    const companyToDelete = ref(null);
+
     /** VARIABLES */
     const filters = ref({name: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] }});
     const loading = ref(null);
     const companies = reactive([]);
     const companyDialog = ref(false);
     const form = ref(defaultForm);
-
+    const editCompany = (company) => {
+    form.value = { ...company }; 
+    companyDialog.value = true;   
+};
     /** COMPUTE & WATCH */
 	const addOrEditLabel = computed(() => {
 		return form.value.id? 'Editar' : 'Adicionar';
@@ -146,5 +184,29 @@
     const hideDialog = () => {
 		companyDialog.value = false;
 	}
+
+    
+const confirmDeleteCompany = (company) => {
+    companyToDelete.value = company;
+    deleteCompanyDialog.value = true;
+};
+
+
+const handleDelete = () => {
+    loading.value = true;
+    deleteCompany(companyToDelete.value.id)
+        .then(() => {
+            successToast('Empresa excluída com sucesso!');
+            handleLoadCompanies(); // Recarrega a lista
+        })
+        .catch((error) => {
+            errorToast(error?.message);
+        })
+        .finally(() => {
+            deleteCompanyDialog.value = false; // Fecha o diálogo
+            companyToDelete.value = null;      // Limpa o estado
+            loading.value = false;
+        });
+};
 
 </script>
