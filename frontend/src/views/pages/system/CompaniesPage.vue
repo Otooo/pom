@@ -186,27 +186,27 @@
 	}
 
     
-const confirmDeleteCompany = (company) => {
-    companyToDelete.value = company;
-    deleteCompanyDialog.value = true;
-};
+    const confirmDeleteCompany = (company) => {
+        companyToDelete.value = company;
+        deleteCompanyDialog.value = true;
+    };
 
 
-const handleDelete = () => {
-    loading.value = true;
-    deleteCompany(companyToDelete.value.id)
-        .then(() => {
-            successToast('Empresa excluída com sucesso!');
-            handleLoadCompanies(); // Recarrega a lista
+    const handleDelete = () => {
+        loading.value = true;
+        deleteCompany(companyToDelete.value.id)
+           .then(() => {
+              successToast('Empresa excluída com sucesso!');
+              handleLoadCompanies(); // Recarrega a lista
         })
-        .catch((error) => {
-            errorToast(error?.message);
+            .catch((error) => {
+              errorToast(error?.message);
         })
         .finally(() => {
-            deleteCompanyDialog.value = false; // Fecha o diálogo
-            companyToDelete.value = null;      // Limpa o estado
+            deleteCompanyDialog.value = false;
+            companyToDelete.value = null;      
             loading.value = false;
         });
-};
+    };
 
 </script>
