@@ -69,7 +69,7 @@
 </template>
 
 <script setup>
-    import { createCompany, fetchCompanies, updateCompany } from '@/service/company';
+    import { createCompany, fetchCompanies, updateCompany, deleteCompany } from '@/service/company';
     import { computed, nextTick, onMounted, reactive, ref } from 'vue';
     import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
     import { useNotify } from '@/composables/useNotify';
