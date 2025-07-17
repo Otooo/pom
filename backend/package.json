@@ -10,8 +10,8 @@
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
     "build": "tsc",
-    "deploy:ci": "RAILWAY_TOKEN=$RAILWAY_TOKEN railway up -- --yes",
-    "deploy": "npm run rail up --yes",
+    "deploy:ci": "RAILWAY_TOKEN=$RAILWAY_TOKEN railway up --service pom-api --ci",
+    "deploy": "railway up --service pom-api",
     "rail": "railway"
   },
   "keywords": [],
