@@ -34,9 +34,11 @@ app.get('/', (_req, res) => {
   res.send('API do Calendário de Alocação funcionando!');
 });
 
-// // Só chama .listen() se for invocado como “node dist/index.js”
-// if (require.main === module) {
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
-// }
+// Só chama .listen() se for invocado como “node dist/index.js”
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+  });
+}
+
+export default app;

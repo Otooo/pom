@@ -26,6 +26,6 @@ jobs:
         run: npm install
 
       - name: 🚀 Deploy para Railway
-        run: npm run deploy
+        run: npm run deploy:ci
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY }}
