@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - develop
 
 jobs:
   deploy:
@@ -29,6 +28,6 @@ jobs:
       - name: 🔥 Deploy para Firebase Hosting
         run: npm run deploy
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_POM_HABIT }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_POM_HABIT }}
           VITE_API_URL: /api
           VITE_API_BASE_URL: https://pom-api-production.up.railway.app
