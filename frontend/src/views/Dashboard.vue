@@ -41,14 +41,14 @@
         <!-- Schedules by Company Chart -->
         <div class="col-span-6 xl:col-span-6">
             <DonutsChartWidget 
-                title="Empresas Alocações"
+                title="Empresas Alocadas"
                 :data="dataCompaniesSchedules"
                 :labels="labelCompanies"
             />
         </div>
         <div class="col-span-6 xl:col-span-6">
             <DonutsChartWidget 
-                title="Locais Alocações"
+                title="Locais Alocados"
                 :data="dataLocationsSchedules"
                 :labels="labelLocations"
             />
@@ -57,7 +57,7 @@
         <!-- Locations x Companies Chart -->
         <div class="col-span-12 xl:col-span-12">
             <BarChartWidget 
-                title="Locais Alocações Empresas"
+                title="Locais x Empresas"
                 :data="dataCompaniesXLocations"
                 :labels="labelCompanies"
             />
