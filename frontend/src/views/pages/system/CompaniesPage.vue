@@ -53,14 +53,14 @@
                         text 
                         rounded 
                         class="mr-2" 
-                        @click="editCompany(data)" 
+                        @click="onEdit(data)" 
                     />
                     <Button 
                         icon="pi pi-trash" 
                         severity="danger" 
                         text 
                         rounded 
-                        @click="confirmDeleteCompany(data)" 
+                        @click="onDelete(data)" 
                     />
                 </template>
             </Column> 
@@ -86,15 +86,15 @@
             </template>
         </Dialog>
 
-        <Dialog header="Confirmação" v-model:visible="deleteCompanyDialog" :style="{ width: '350px' }" :modal="true">
-            <div class="flex items-center justify-center">
-                <i class="pi pi-exclamation-triangle mr-4" style="font-size: 2rem" />
-                <span>Tem certeza que deseja excluir esta empresa?</span>
-            </div>
-            <template #footer>
-               <Button label="Não" icon="pi pi-times" @click="deleteCompanyDialog = false" text severity="secondary" />
+        <Dialog header="Confirmação" v-model:visible="deleteCompanyDialog" class="delete-confirmation-dialog" :modal="true">
+           <div class="flex items-center justify-center">
+               <i class="pi pi-exclamation-triangle mr-4" style="font-size: 2rem" />
+               <span>Tem certeza que deseja excluir esta empresa?</span>
+           </div>
+           <template #footer>
+               <Button label="Não" icon="pi pi-times" @click="closeDeleteModal" text severity="secondary" />
                <Button label="Sim" icon="pi pi-check" @click="handleDelete" severity="danger" outlined autofocus />
-            </template>
+           </template>
         </Dialog>
     </div>
 </template>
@@ -160,7 +160,7 @@
 		loading.value = true;
 
 		const action = !!form.value.id
-			? handleEdit
+			? handleUpdate
 			: handleCreate;
 
 		action().then((data) => {
@@ -177,7 +177,7 @@
 	const handleCreate = async () => {
 		return createCompany(form.value)
 	}
-	const handleEdit = async () => {
+	const handleUpdate = async () => {
 		return updateCompany(form.value.id, form.value)
 	}
 
@@ -189,6 +189,16 @@
     const confirmDeleteCompany = (company) => {
         companyToDelete.value = company;
         deleteCompanyDialog.value = true;
+    };
+
+    const onEdit = (company) => {
+    form.value = { ...company };
+    companyDialog.value = true;
+    };
+
+    const onDelete = (company) => {
+    companyToDelete.value = company;
+    deleteCompanyDialog.value = true;
     };
 
 
@@ -209,4 +219,19 @@
         });
     };
 
+    const closeDeleteModal = () => {
+    deleteCompanyDialog.value = false;
+}
+
+
+
 </script>
+<style scoped>
+.company-dialog {
+    width: 450px;
+}
+
+.delete-confirmation-dialog {
+    width: 350px;
+}
+</style>
