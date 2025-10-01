@@ -4,12 +4,14 @@
         
         <Loading :loading="loading" loadingText="Processando Requisição..." />
 
+        <!-- Add Company -->
         <Toolbar class="mb-6">
             <template #start>
                 <Button label="Nova Empresa" icon="pi pi-plus" severity="primary" class="mr-2" @click="openNewCompany" />
             </template>
         </Toolbar>
         
+        <!-- Table Companies -->
         <DataTable
             :value="companies"
             :paginator="true"
@@ -25,13 +27,14 @@
         >
             <template #header>
                 <div class="flex justify-between">
-                    <Button type="button" icon="pi pi-filter-slash" label="Clear" outlined @click="clearFilter()" />
+                    <Button type="button" icon="pi pi-filter-slash" label="Limpar Filtros" outlined @click="clearFilter()" />
                 </div>
             </template>
             
             <template #empty> Nenhuma empresa encontrada. </template>
 
-            <Column field="name" header="Name" style="min-width: 12rem">
+            <!-- Table Name -->
+            <Column field="name" header="Nome" style="min-width: 12rem">
                 <template #body="{ data }">
                     {{ data.name }}
                 </template>
@@ -39,12 +42,15 @@
                     <InputText v-model="filterModel.value" type="text" placeholder="Search by name" />
                 </template>
             </Column>
+
+            <!-- Table Status -->
             <Column header="Status" :filterMenuStyle="{ width: '14rem' }" style="min-width: 12rem">
                 <template #body="{ data }">
                     <Tag value="Ativo" severity="success" />
                 </template>
             </Column>
 
+            <!-- Table Actions -->
             <Column header="Ações" style="min-width: 8rem">
                 <template #body="{ data }">
                     <Button 
@@ -80,12 +86,14 @@
                 </div>
 			</Fluid>
 
+            <!-- Save Buttons -->
             <template #footer>
                 <Button label="Cancelar" icon="pi pi-times" text @click="hideDialog" />
                 <Button :label="addOrEditLabel" icon="pi pi-check" @click="handleSave" />
             </template>
         </Dialog>
 
+        <!-- Delete Confirmation Dialog -->
         <Dialog header="Confirmação" v-model:visible="deleteCompanyDialog" class="delete-confirmation-dialog" :modal="true">
            <div class="flex items-center justify-center">
                <i class="pi pi-exclamation-triangle mr-4" style="font-size: 2rem" />
@@ -117,15 +125,20 @@
     const companyToDelete = ref(null);
 
     /** VARIABLES */
-    const filters = ref({name: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] }});
+    const filters = ref({
+        name: { 
+            operator: FilterOperator.AND, 
+            constraints: [{ 
+                value: null, 
+                matchMode: FilterMatchMode.STARTS_WITH 
+            }] 
+        }
+    });
     const loading = ref(null);
     const companies = reactive([]);
     const companyDialog = ref(false);
     const form = ref(defaultForm);
-    const editCompany = (company) => {
-    form.value = { ...company }; 
-    companyDialog.value = true;   
-};
+    
     /** COMPUTE & WATCH */
 	const addOrEditLabel = computed(() => {
 		return form.value.id? 'Editar' : 'Adicionar';
@@ -133,14 +146,14 @@
 
     /** METHODS */
     onMounted(() => { 
-        handleLoadCompanies();
+        handleLoadCompanies(true);
     })
 
-    const handleLoadCompanies = async () => {
+    const handleLoadCompanies = async (showMessage = false) => {
         loading.value = true;
         fetchCompanies().then((data) => {
-            successToast('Empresas carregadas com sucesso!');
             Object.assign(companies, data);
+            showMessage && successToast('Empresas carregadas com sucesso!');
         }).catch((error) => {
             errorToast(error?.message);
         }).finally(() => {
@@ -149,7 +162,15 @@
     }
 
     const clearFilter = () => {
-        filters.value = {name: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] }};
+        filters.value = {
+            name: { 
+                operator: FilterOperator.AND, 
+                constraints: [{ 
+                    value: null, 
+                    matchMode: FilterMatchMode.STARTS_WITH 
+                }] 
+            }
+        };
     }
 
     const openNewCompany = () => {
@@ -165,8 +186,9 @@
 
 		action().then((data) => {
 			successToast('Empresa registrada com sucesso!');
-            handleLoadCompanies();
-		}).catch((error) => {
+		})
+        .then(handleLoadCompanies)
+        .catch((error) => {
 			errorToast(error?.message);
 		}).finally(() => {
             hideDialog();
@@ -185,32 +207,25 @@
 		companyDialog.value = false;
 	}
 
-    
-    const confirmDeleteCompany = (company) => {
-        companyToDelete.value = company;
-        deleteCompanyDialog.value = true;
-    };
-
     const onEdit = (company) => {
-    form.value = { ...company };
-    companyDialog.value = true;
+        form.value = { ...company };
+        companyDialog.value = true;
     };
 
     const onDelete = (company) => {
-    companyToDelete.value = company;
-    deleteCompanyDialog.value = true;
+        companyToDelete.value = company;
+        deleteCompanyDialog.value = true;
     };
 
 
     const handleDelete = () => {
         loading.value = true;
         deleteCompany(companyToDelete.value.id)
-           .then(() => {
-              successToast('Empresa excluída com sucesso!');
-              handleLoadCompanies(); // Recarrega a lista
-        })
-            .catch((error) => {
-              errorToast(error?.message);
+        .then(() => {
+            successToast('Empresa excluída com sucesso!');
+        }).then(handleLoadCompanies)
+        .catch((error) => {
+            errorToast(error?.message);
         })
         .finally(() => {
             deleteCompanyDialog.value = false;
@@ -220,18 +235,18 @@
     };
 
     const closeDeleteModal = () => {
-    deleteCompanyDialog.value = false;
-}
-
-
+        deleteCompanyDialog.value = false;
+    }
 
 </script>
-<style scoped>
-.company-dialog {
-    width: 450px;
-}
 
-.delete-confirmation-dialog {
-    width: 350px;
-}
+
+<style scoped>
+    .company-dialog {
+        width: 450px;
+    }
+
+    .delete-confirmation-dialog {
+        width: 350px;
+    }
 </style>

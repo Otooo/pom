@@ -25,13 +25,13 @@
         >
             <template #header>
                 <div class="flex justify-between">
-                    <Button type="button" icon="pi pi-filter-slash" label="Clear" outlined @click="clearFilter()" />
+                    <Button type="button" icon="pi pi-filter-slash" label="Limpar Filtros" outlined @click="clearFilter()" />
                 </div>
             </template>
             
             <template #empty> Nenhum local encontrado. </template>
 
-            <Column field="name" header="Name" style="min-width: 12rem">
+            <Column field="name" header="Nome" style="min-width: 12rem">
                 <template #body="{ data }">
                     {{ data.name }}
                 </template>
@@ -107,7 +107,7 @@
     const handleLoadLocations = async () => {
         loading.value = true;
         fetchLocations().then((data) => {
-            successToast('Locals carregadas com sucesso!');
+            successToast('Locais carregados com sucesso!');
             Object.assign(companies, data);
         }).catch((error) => {
             errorToast(error?.message);
