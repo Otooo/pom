@@ -12,7 +12,7 @@ const model = ref([
         label: 'Funcionalidades',
         items: [
             { label: 'Calendário', icon: 'pi pi-fw pi-calendar', to: '/calendar' },
-            { label: 'Companies', icon: 'pi pi-fw pi-building-columns', to: '/companies' },
+            { label: 'Empresas', icon: 'pi pi-fw pi-building-columns', to: '/companies' },
             { label: 'Locais', icon: 'pi pi-fw pi-map-marker', to: '/locations' },
         ]
     },
