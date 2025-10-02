@@ -81,6 +81,21 @@ export const ScheduleController = {
         }
     },
 
+    deleteOrphans: async (req: Request, res: Response) => {
+        try {
+            await ScheduleService.deleteOrphans();
+            
+            return res.status(HTTP_CODE.SUCCESS).json({ 
+                message: 'Schedules órfãos removidos com sucesso' 
+            });
+        } catch (error: any) {
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
+
     generateDataToMsg: async (req: Request, res: Response) => {
         try {
             const dataMsg = await ScheduleService.generateDataToMsg(req.body?.monthYear);
