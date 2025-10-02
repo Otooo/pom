@@ -7,40 +7,108 @@ import { Location } from '../models/Location';
 import { DB_COLLECTION } from '../types/db_collection.enum';
 
 const SERVICE = new DataService<Schedule>(DB_COLLECTION.SCHEDULE);
-
 const COMPANY_SERVICE = new DataService<Company>(DB_COLLECTION.COMPANY);
 const LOCATION_SERVICE = new DataService<Location>(DB_COLLECTION.LOCATION);
 
 export const ScheduleService = {
     index: async (): Promise<Schedule[]> => {
-        const allSchedules = await SERVICE.getAll();
+        const schedules = await SERVICE.getAll();
 
-        const schedules =  await Promise.all(
-            allSchedules.map(async (schedule) => {
-                let promises = [
-                    COMPANY_SERVICE.getById(schedule.company_id),
-                    LOCATION_SERVICE.getById(schedule.location_id),
-                ]
-                const [company, location] = await Promise.allSettled(promises);
-                const companyExists = (company.status === 'fulfilled' && company?.value !== null)
-                const locationExists = (location.status === 'fulfilled' && location?.value !== null)
+        // Coletar IDs únicos
+        const companyIds = [...new Set(schedules.map(s => s.company_id))];
+        const locationIds = [...new Set(schedules.map(s => s.location_id))];
 
-                if (companyExists && locationExists) {
-                    schedule.company = company.value as Company;
-                    schedule.location =location.value as Location;
+        // Buscar todos de uma vez
+        const [companies, locations] = await Promise.all([
+            COMPANY_SERVICE.getByIds(companyIds),
+            LOCATION_SERVICE.getByIds(locationIds)
+        ]);
 
-                    return schedule;
-                } else {
-                    ScheduleService.delete(schedule.id);
-                }
+        // Criar maps para lookup rápido
+        const companyMap = new Map(companies.map(c => [c.id, c]));
+        const locationMap = new Map(locations.map(l => [l.id, l]));
 
-                return null;
-            })
-        );
+        // Associar dados
+        return schedules.map(schedule => {
+            schedule.company = companyMap.get(schedule.company_id) as Company;
+            schedule.location = locationMap.get(schedule.location_id) as Location;
 
-        return schedules.filter(Boolean) as Schedule[];
+            return (schedule.company && schedule.location) 
+                ? schedule
+                : null;
+        }).filter(Boolean) as Schedule[] ?? [];
     },
-    
+
+    deleteOrphans: async (): Promise<void> => {
+        const schedules = await SERVICE.getAll();
+
+        // Coletar IDs únicos
+        const companyIds = [...new Set(schedules.map(s => s.company_id))];
+        const locationIds = [...new Set(schedules.map(s => s.location_id))];
+
+        // Buscar todos de uma vez
+        const [companies, locations] = await Promise.all([
+            COMPANY_SERVICE.getByIds(companyIds),
+            LOCATION_SERVICE.getByIds(locationIds)
+        ]);
+
+        // Criar maps para lookup rápido
+        const companyMap = new Map(companies.map(c => [c.id, c]));
+        const locationMap = new Map(locations.map(l => [l.id, l]));
+
+        schedules.map(schedule => {
+            schedule.company = companyMap.get(schedule.company_id) as Company;
+            schedule.location = locationMap.get(schedule.location_id) as Location;
+
+            if (!(schedule.company && schedule.location)) {
+                ScheduleService.delete(schedule.id);
+            }
+        });
+    },
+
+    generateDataToMsg: async (monthYear: string): Promise<any> => {
+        if (monthYear.length !== 7) {
+            DATA_REQUIRED_ERROR('Mês e ano devem ser informado');
+        }
+
+        let schedules = await SERVICE.getAll();
+        schedules = schedules.filter(s => s.date.substring(0, 7) === monthYear);
+
+        // Mesma otimização do index()
+        const companyIds = [...new Set(schedules.map(s => s.company_id))];
+        const locationIds = [...new Set(schedules.map(s => s.location_id))];
+
+        const [companies, locations] = await Promise.all([
+            COMPANY_SERVICE.getByIds(companyIds),
+            LOCATION_SERVICE.getByIds(locationIds)
+        ]);
+
+        const companyMap = new Map(companies.map(c => [c.id, c]));
+        const locationMap = new Map(locations.map(l => [l.id, l]));
+
+        const groupedSchedules = schedules.reduce((acc: any, schedule: Schedule) => {
+            const key = schedule.company_id;
+            if (!acc[key]) {
+                acc[key] = [];
+            }
+
+            const company = companyMap.get(schedule.company_id);
+            const location = locationMap.get(schedule.location_id);
+
+            const data = {
+                companyName: company?.name || 'SEM NOME',
+                date: schedule.date,
+                shift: schedule.shift,
+                locationName: location?.name || 'SEM LOCAL',
+            }
+
+            acc[key].push(data);
+            return acc;
+        }, {} as any);
+
+        return groupedSchedules;
+    },
+
     find: async (id: string | number): Promise<Schedule | null> => {
         const schedule = await SERVICE.getById(id);
         
@@ -97,39 +165,5 @@ export const ScheduleService = {
         }
         
         return deleted;
-    },
-
-    generateDataToMsg: async (monthYear: string): Promise<any> => {
-        if (monthYear.length !== 7) {
-            DATA_REQUIRED_ERROR('Mês e ano devem ser informado');
-        }
-
-        let schedules = await SERVICE.getAll();
-        schedules = schedules.filter(s => s.date.substring(0, 7) === monthYear);
-        await Promise.all(
-            schedules.map(async (schedule) => {
-                schedule.company = await COMPANY_SERVICE.getById(schedule.company_id) as Company;
-                schedule.location = await LOCATION_SERVICE.getById(schedule.location_id) as Location;
-            })
-        );
-
-        const groupedSchedules = schedules.reduce((acc: any, schedule: Schedule) => {
-        	const key = schedule.company_id;
-        	if (!acc[key]) {
-        		acc[key] = [];
-        	}
-
-            const data = {
-                companyName: schedule.company?.name || 'SEM NOME',
-                date: schedule.date,
-                shift: schedule.shift,
-                locationName: schedule.location?.name || 'SEM LOCAL',
-            }
-
-            acc[key].push(data);
-            return acc;
-        }, {} as any);
-
-        return groupedSchedules;
     },
 };

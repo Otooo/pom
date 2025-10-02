@@ -6,19 +6,28 @@ export const db = {
     await redis.connect();
   },
 
-  // Ler o banco de dados
+  // Nova função para buscar múltiplos itens de uma vez
+  readMultiple: async (keyCollection: string, keys: string[]): Promise<any[]> => {
+    if (keys.length === 0) return [];
+    
+    const redisKeys = keys.map(key => `${keyCollection}:${key}`);
+    const results = await redis.mGet(redisKeys);
+    
+    return results.map(result => result ? JSON.parse(result) : null);
+  },
+
+  // Otimizar readAll com pipeline
   readAll: async (keyCollection: string): Promise<any[]> => {
     const ids = await redis.sMembers(`${keyCollection}:index`);
-    if (!ids) return [];
+    if (!ids || ids.length === 0) return [];
     
-    const items = await Promise.all(
-      (ids as string[]).map(async (id) => {
-        const raw = await redis.get(`${keyCollection}:${id}`);
-        return raw ? JSON.parse(raw) : null;
-      })
-    );
-
-    return items;
+    // Usar mGet para buscar todos de uma vez
+    const redisKeys = ids.map(id => `${keyCollection}:${id}`);
+    const results = await redis.mGet(redisKeys);
+    
+    return results
+      .map(result => result ? JSON.parse(result) : null)
+      .filter(item => item !== null);
   },
 
   readDb: async (keyCollection: string, key: string): Promise<any | null> => {
@@ -43,4 +52,5 @@ export const db = {
     
     return result === 1;
   },
+
 }
