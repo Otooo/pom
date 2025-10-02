@@ -4,14 +4,16 @@
         
         <Loading :loading="loading" loadingText="Processando Requisição..." />
 
+        <!-- Add Local -->
         <Toolbar class="mb-6">
             <template #start>
                 <Button label="Novo Local" icon="pi pi-plus" severity="primary" class="mr-2" @click="openNewLocation" />
             </template>
         </Toolbar>
         
+        <!-- Table Locations-->
         <DataTable
-            :value="companies"
+            :value="locations"
             :paginator="true"
             :rows="10"
             dataKey="id"
@@ -31,6 +33,7 @@
             
             <template #empty> Nenhum local encontrado. </template>
 
+            <!-- Table Name -->
             <Column field="name" header="Nome" style="min-width: 12rem">
                 <template #body="{ data }">
                     {{ data.name }}
@@ -39,16 +42,41 @@
                     <InputText v-model="filterModel.value" type="text" placeholder="Search by name" />
                 </template>
             </Column>
+
+            <!-- Table Address -->
             <Column header="Endereço" :filterMenuStyle="{ width: '14rem' }" style="min-width: 12rem">
                 <template #body="{ data }">
                     {{ data.address }}
                 </template>
             </Column>
+
+            <!-- Table Status -->
             <Column header="Status" :filterMenuStyle="{ width: '14rem' }" style="min-width: 12rem">
                 <template #body="{ data }">
                     <Tag value="Ativo" severity="success" />
                 </template>
             </Column>
+
+            <!-- Table Actions -->
+            <Column header="Ações" style="min-width: 8rem">
+                <template #body="{ data }">
+                    <Button 
+                        icon="pi pi-pencil" 
+                        severity="secondary" 
+                        text 
+                        rounded 
+                        class="mr-2" 
+                        @click="onEdit(data)" 
+                    />
+                    <Button 
+                        icon="pi pi-trash" 
+                        severity="danger" 
+                        text 
+                        rounded 
+                        @click="onDelete(data)" 
+                    />
+                </template>
+            </Column> 
         </DataTable>
 
         <!-- Dialog ADD/EDIT -->
@@ -70,12 +98,24 @@
                 <Button :label="addOrEditLabel" icon="pi pi-check" @click="handleSave" />
             </template>
         </Dialog>
+
+        <!-- Delete Confirmation Dialog -->
+        <Dialog header="Confirmação" v-model:visible="deleteLocationDialog" class="delete-confirmation-dialog" :modal="true">
+           <div class="flex items-center justify-center">
+               <i class="pi pi-exclamation-triangle mr-4" style="font-size: 2rem" />
+               <span>Tem certeza que deseja excluir este local?</span>
+           </div>
+           <template #footer>
+               <Button label="Não" icon="pi pi-times" @click="closeDeleteModal" text severity="secondary" />
+               <Button label="Sim" icon="pi pi-check" @click="handleDelete" severity="danger" outlined autofocus />
+           </template>
+        </Dialog>
     </div>
 </template>
 
 <script setup>
-    import { createLocation, fetchLocations, updateLocation } from '@/service/location';
-    import { computed, nextTick, onMounted, reactive, ref } from 'vue';
+    import { createLocation, deleteLocation, fetchLocations, updateLocation } from '@/service/location';
+    import { computed, nextTick, onMounted, ref } from 'vue';
     import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
     import { useNotify } from '@/composables/useNotify';
     
@@ -88,11 +128,21 @@
 	};
 
     /** VARIABLES */
-    const filters = ref({name: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] }});
+    const filters = ref({ 
+        name: { 
+            operator: FilterOperator.AND, 
+            constraints: [{ 
+                value: null, 
+                matchMode: FilterMatchMode.STARTS_WITH 
+            }] 
+        }
+    });
     const loading = ref(null);
-    const companies = reactive([]);
+    const locations = ref([]);
     const locationDialog = ref(false);
     const form = ref(defaultForm);
+    const deleteLocationDialog = ref(false);
+    const locationToDelete = ref(null);
 
     /** COMPUTE & WATCH */
 	const addOrEditLabel = computed(() => {
@@ -101,14 +151,14 @@
 
     /** METHODS */
     onMounted(() => { 
-        handleLoadLocations();
+        handleLoadLocations(true);
     })
 
-    const handleLoadLocations = async () => {
+    const handleLoadLocations = async (showMessage = false) => {
         loading.value = true;
         fetchLocations().then((data) => {
-            successToast('Locais carregados com sucesso!');
-            Object.assign(companies, data);
+            locations.value = data;
+            showMessage && successToast('Locais carregados com sucesso!');
         }).catch((error) => {
             errorToast(error?.message);
         }).finally(() => {
@@ -133,8 +183,8 @@
 
 		action().then((data) => {
 			successToast('Local registrada com sucesso!');
-            handleLoadLocations();
-		}).catch((error) => {
+        }).then(handleLoadLocations)
+        .catch((error) => {
 			errorToast(error?.message);
 		}).finally(() => {
             hideDialog();
@@ -152,5 +202,35 @@
     const hideDialog = () => {
 		locationDialog.value = false;
 	}
+
+    const onEdit = (company) => {
+        form.value = { ...company };
+        locationDialog.value = true;
+    };
+
+    const onDelete = (location) => {
+        locationToDelete.value = location;
+        deleteLocationDialog.value = true;
+    };
+
+    const closeDeleteModal = () => {
+        deleteLocationDialog.value = false;
+    }
+
+    const handleDelete = () => {
+        loading.value = true;
+        deleteLocation(locationToDelete.value.id)
+        .then(() => {
+            successToast('Local excluído com sucesso!');
+        }).then(handleLoadLocations)
+        .catch((error) => {
+            errorToast(error?.message);
+        })
+        .finally(() => {
+            deleteLocationDialog.value = false;
+            locationToDelete.value = null;      
+            nextTick().then(() => loading.value = false );
+        });
+    };
 
 </script>
