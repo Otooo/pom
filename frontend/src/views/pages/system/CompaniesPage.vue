@@ -119,11 +119,7 @@
 		id: null,
 		name: '',
 	};
-
-    /** REFS */
-    const deleteCompanyDialog = ref(false);
-    const companyToDelete = ref(null);
-
+    
     /** VARIABLES */
     const filters = ref({
         name: { 
@@ -135,9 +131,11 @@
         }
     });
     const loading = ref(null);
-    const companies = reactive([]);
+    const companies = ref([]);
     const companyDialog = ref(false);
     const form = ref(defaultForm);
+    const deleteCompanyDialog = ref(false);
+    const companyToDelete = ref(null);
     
     /** COMPUTE & WATCH */
 	const addOrEditLabel = computed(() => {
@@ -152,12 +150,12 @@
     const handleLoadCompanies = async (showMessage = false) => {
         loading.value = true;
         fetchCompanies().then((data) => {
-            Object.assign(companies, data);
+            companies.value = data;
             showMessage && successToast('Empresas carregadas com sucesso!');
         }).catch((error) => {
             errorToast(error?.message);
         }).finally(() => {
-            loading.value = false;
+            nextTick().then(() => loading.value = false );
         });
     }
 
@@ -217,6 +215,9 @@
         deleteCompanyDialog.value = true;
     };
 
+    const closeDeleteModal = () => {
+        deleteCompanyDialog.value = false;
+    }
 
     const handleDelete = () => {
         loading.value = true;
@@ -230,13 +231,9 @@
         .finally(() => {
             deleteCompanyDialog.value = false;
             companyToDelete.value = null;      
-            loading.value = false;
+            nextTick().then(() => loading.value = false );
         });
     };
-
-    const closeDeleteModal = () => {
-        deleteCompanyDialog.value = false;
-    }
 
 </script>
 

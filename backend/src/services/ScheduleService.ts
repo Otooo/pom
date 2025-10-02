@@ -13,16 +13,32 @@ const LOCATION_SERVICE = new DataService<Location>(DB_COLLECTION.LOCATION);
 
 export const ScheduleService = {
     index: async (): Promise<Schedule[]> => {
-        const schedules = await SERVICE.getAll();
+        const allSchedules = await SERVICE.getAll();
 
-        await Promise.all(
-            schedules.map(async (schedule) => {
-                schedule.company = await COMPANY_SERVICE.getById(schedule.company_id) as Company;
-                schedule.location = await LOCATION_SERVICE.getById(schedule.location_id) as Location;
+        const schedules =  await Promise.all(
+            allSchedules.map(async (schedule) => {
+                let promises = [
+                    COMPANY_SERVICE.getById(schedule.company_id),
+                    LOCATION_SERVICE.getById(schedule.location_id),
+                ]
+                const [company, location] = await Promise.allSettled(promises);
+                const companyExists = (company.status === 'fulfilled' && company?.value !== null)
+                const locationExists = (location.status === 'fulfilled' && location?.value !== null)
+
+                if (companyExists && locationExists) {
+                    schedule.company = company.value as Company;
+                    schedule.location =location.value as Location;
+
+                    return schedule;
+                } else {
+                    ScheduleService.delete(schedule.id);
+                }
+
+                return null;
             })
         );
 
-        return schedules;
+        return schedules.filter(Boolean) as Schedule[];
     },
     
     find: async (id: string | number): Promise<Schedule | null> => {
