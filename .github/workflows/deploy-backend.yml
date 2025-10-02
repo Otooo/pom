@@ -15,10 +15,10 @@ jobs:
 
     steps:
       - name: 📥 Checkout do código
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: ⚙️ Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20.19'
 
@@ -28,4 +28,4 @@ jobs:
       - name: 🚀 Deploy para Railway
         run: npm run deploy:ci
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

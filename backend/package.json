@@ -12,7 +12,8 @@
     "build": "tsc",
     "deploy:ci": "RAILWAY_TOKEN=$RAILWAY_TOKEN railway up --service pom-api --ci",
     "deploy": "railway up --service pom-api",
-    "rail": "railway"
+    "rail": "railway",
+    "rail:login": "railway login --browserless"
   },
   "keywords": [],
   "author": "",
