@@ -24,20 +24,39 @@
 			</template>
 
 			<template #end>
-				<Button label="Gerar Mensagens" icon="pi pi-upload" severity="secondary" @click="togglePopover" />
-				<Popover ref="popover" id="overlay_panel" style="width: 450px">
-					<Select
-						v-model="dataMsgParam"
-						:options="months"
-						optionLabel="name"
-						optionValue="code"
-						placeholder="Mês"
-						checkmark 
-						:highlightOnSelect="true"
-					/> de {{ format(today, 'yyyy') }}
-					
-					<Button label="Gerar" icon="pi pi-send" @click="exportMsgWhatsApp" severity="info" outlined autofocus />
-				</Popover>
+				<div class="mr-4">
+					<Button label="Exportar Excel" icon="pi pi-upload" severity="secondary" @click="togglePopoverExport" />
+					<Popover ref="popoverExport" id="overlay_panel" style="width: 450px">
+						<Select
+							v-model="dataMsgParam"
+							:options="months"
+							optionLabel="name"
+							optionValue="code"
+							placeholder="Mês"
+							checkmark 
+							:highlightOnSelect="true"
+						/> de {{ format(today, 'yyyy') }}
+						
+						<Button label="Exportar" icon="pi pi-file-excel" @click="exportExcel" severity="info" outlined autofocus />
+					</Popover>
+				</div>
+
+				<div>
+					<Button label="Gerar Mensagens" icon="pi pi-upload" severity="secondary" @click="togglePopover" />
+					<Popover ref="popover" id="overlay_panel" style="width: 450px">
+						<Select
+							v-model="dataMsgParam"
+							:options="months"
+							optionLabel="name"
+							optionValue="code"
+							placeholder="Mês"
+							checkmark 
+							:highlightOnSelect="true"
+						/> de {{ format(today, 'yyyy') }}
+						
+						<Button label="Gerar" icon="pi pi-send" @click="exportMsgWhatsApp" severity="info" outlined autofocus />
+					</Popover>
+				</div>
 			</template>
 		</Toolbar>
 		
@@ -187,15 +206,23 @@
 
 <script setup>
 	import { onMounted, computed, ref, nextTick, toRaw } from 'vue'
-	import { Qalendar } from "qalendar";
+	import { Qalendar } from '@/libs/qalendar/dist/qalendar.es.js'
 	import Loading from '@/components/commons/Loading.vue'
 	import { fetchCompanies } from '@/service/company';
 	import { fetchLocations } from '@/service/location';
-	import { createSchedule, deleteSchedule, fetchSchedules, generateDataMsg, updateSchedule } from '@/service/schedule';
+	import { 
+		createSchedule, 
+		deleteSchedule, 
+		fetchSchedules, 
+		generateDataMsg, 
+		updateSchedule,
+		exportExcel as exportExcelEndPoint
+	} from '@/service/schedule';
 	import { useNotify } from '@/composables/useNotify';
 	import { format, parseISO } from 'date-fns';
 	import { ptBR } from 'date-fns/locale';
 	import { shiftResolve } from '@/utils/timeUtil';
+	import { downloadExcel } from '@/utils/files';
 
 	/** CONSTANTS */
     const { successToast, errorToast } = useNotify();
@@ -212,7 +239,7 @@
 			colorSchemes: {
 				morning: {
 					color: '#fff',
-					backgroundColor: 'lightgreen',
+					backgroundColor: 'green',
 				},
 				afternoon: {
 					color: '#fff',
@@ -270,6 +297,7 @@
 	const draggedCompany = ref(null);
 	const form = ref(defaultForm);
 	const popover = ref(null);
+	const popoverExport = ref(null);
 	const dataMsgParam = ref(format(today, 'yyyy-MM'));
 	const dataMsg = ref('');
 	const showMessageDialog = ref(false);
@@ -523,10 +551,37 @@
 		}
 	};
 
+	const togglePopoverExport = (ev) => {
+		popoverExport.value.toggle(ev);
+	}
 	const togglePopover = (ev) => {
 		popover.value.toggle(ev);
 	}
 
+	const exportExcel = () => {
+		loading.value = true;
+		exportExcelEndPoint(dataMsgParam.value).then(({data, headers}) => {
+			const cd = headers?.['content-disposition'];
+			let filename = 'calendar-export.xlsx';
+			if (cd) {
+				const m = cd.match(/filename="?([^"]+)"?/i);
+				if (m?.[1]) {
+					filename = m[1];
+				}
+			}
+			
+			downloadExcel(data, filename).catch((err) => {
+				errorToast('Erro ao baixar Excel: ' + (err?.message || 'Erro desconhecido'));
+			});
+
+			successToast('Planilha gerada com sucesso!');
+		}).catch((error) => {
+			errorToast(error?.message);
+		}).finally(() => {
+			togglePopoverExport(null);
+			loading.value = false;
+		})
+	}	
 	const exportMsgWhatsApp = () => {
 		loading.value = true;
 		generateDataMsg(dataMsgParam.value).then((data) => {
@@ -576,7 +631,7 @@
 </script>
 
 <style>
-	@import "qalendar/dist/style.css";
+	@import "@/libs/qalendar/dist/style.css";
 
 	/* Estilo global ou dentro do seu <style scoped> */
 	.calendar-month__weekday {
@@ -589,10 +644,15 @@
 		caret-color: transparent;
 		cursor: pointer;
 	}
-	
+
+	.week-timeline__event.is-event {
+		font-size: larger;
+		padding: 14px;
+	}
+
 	.calendar-month__weekday * {
 		caret-color: transparent;
-		font-size: 0.8rem;
+		font-size: 1.05rem;
 	}
 
 	.draggable-company {

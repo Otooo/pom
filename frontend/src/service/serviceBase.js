@@ -1,9 +1,13 @@
 
-export const executeActionService = async (action) => {
+export const executeActionService = async (action, withMetadata = false) => {
     try {
-        const { data } = await action();
+        const response = await action();
 
-        return data;
+        if (withMetadata) {
+            return response;
+        }
+        
+        return response.data;
     } catch (error) {
         // TODO: talvez usar um toast
         throw error;
