@@ -31,6 +31,14 @@ export const generateDataMsg = async (monthYear) => {
     return executeActionService(async () => axios.post(`${API_PATH}/data-msg`, { monthYear } ));
 }
 
+export const exportExcel = async (monthYear) => {
+    const withMetada = true;
+    return executeActionService(
+        async () => axios.post(`${API_PATH}/export`, { monthYear }, { responseType: 'blob' }),
+        withMetada
+    );
+}
+
 export const calendarDays = () => {
     const scheduleStore = useScheduleStore();
     

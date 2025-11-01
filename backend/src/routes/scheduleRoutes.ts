@@ -14,5 +14,7 @@ scheduleRoutes.put(`${prefix}/:id`, ScheduleController.updateSchedule);
 scheduleRoutes.post(`${prefix}`, ScheduleController.createSchedule);
 scheduleRoutes.post(`${prefix}/data-msg`, ScheduleController.generateDataToMsg);
 
+scheduleRoutes.post(`${prefix}/export`, ScheduleController.exportSchedule);
+
 scheduleRoutes.delete(`${prefix}/orphans`, ScheduleController.deleteOrphans);
 scheduleRoutes.delete(`${prefix}/:id`, ScheduleController.deleteSchedule);

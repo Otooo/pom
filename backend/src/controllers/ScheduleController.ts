@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { HTTP_CODE, HTTP_CODE_IS_VALID } from '../types/http_code.enum';
 import { ScheduleService } from '../services/ScheduleService';
+import { ExportService } from '../services/ExportService';
 
 export const ScheduleController = {
     getAllSchedules: async (req: Request, res: Response) => {
@@ -101,6 +102,29 @@ export const ScheduleController = {
             const dataMsg = await ScheduleService.generateDataToMsg(req.body?.monthYear);
            
             return res.status(HTTP_CODE.SUCCESS).send(dataMsg);
+        } catch (error: any) {
+            const status = HTTP_CODE_IS_VALID(error?.name) 
+                ? error.name 
+                : HTTP_CODE.INTERNAL_SERVER_ERROR;
+            return res.status(status).json(error);
+        }
+    },
+
+    exportSchedule: async (req: Request, res: Response) => {
+        try {
+            const { monthYear } = req.body
+
+            if (!monthYear || !/^\d{4}-\d{2}$/.test(monthYear)) {
+                return res.status(HTTP_CODE.BAD_REQUEST).json({ message: 'Selecione um mês e ano válido.' });
+            }
+
+            const xlsxBuffer = await ExportService.buildCalendarWorkbook(monthYear);
+
+            const filename = `calendario-${monthYear}.xlsx`;
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            res.status(HTTP_CODE.SUCCESS).send(xlsxBuffer);
+
         } catch (error: any) {
             const status = HTTP_CODE_IS_VALID(error?.name) 
                 ? error.name 
