@@ -70,6 +70,7 @@
 			@edit-event="onEditEvent"
 			@delete-event="onDeleteEvent"
 			@event-was-dragged="handleEditDragged"
+			@updated-mode="handleUpdateMode"
 		>
 		</Qalendar>
 
@@ -462,6 +463,12 @@
 			waitForCalendarToDrag();
 			loading.value = false;
 		})
+	}
+
+	const handleUpdateMode = (action) => {
+		if ("month" === action.mode) {
+			setupDropListeners();
+		} 
 	}
 
 	onMounted(() => {
