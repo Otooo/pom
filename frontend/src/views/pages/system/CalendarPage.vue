@@ -206,7 +206,7 @@
 
 <script setup>
 	import { onMounted, computed, ref, nextTick, toRaw } from 'vue'
-	import { Qalendar } from "qalendar";
+	import { Qalendar } from '@/libs/qalendar/dist/qalendar.es.js'
 	import Loading from '@/components/commons/Loading.vue'
 	import { fetchCompanies } from '@/service/company';
 	import { fetchLocations } from '@/service/location';
@@ -222,7 +222,7 @@
 	import { format, parseISO } from 'date-fns';
 	import { ptBR } from 'date-fns/locale';
 	import { shiftResolve } from '@/utils/timeUtil';
-import { downloadExcel } from '@/utils/files';
+	import { downloadExcel } from '@/utils/files';
 
 	/** CONSTANTS */
     const { successToast, errorToast } = useNotify();
@@ -631,7 +631,7 @@ import { downloadExcel } from '@/utils/files';
 </script>
 
 <style>
-	@import "qalendar/dist/style.css";
+	@import "@/libs/qalendar/dist/style.css";
 
 	/* Estilo global ou dentro do seu <style scoped> */
 	.calendar-month__weekday {
@@ -644,7 +644,7 @@ import { downloadExcel } from '@/utils/files';
 		caret-color: transparent;
 		cursor: pointer;
 	}
-	
+
 	.week-timeline__event.is-event {
 		font-size: larger;
 		padding: 14px;
@@ -652,7 +652,7 @@ import { downloadExcel } from '@/utils/files';
 
 	.calendar-month__weekday * {
 		caret-color: transparent;
-		font-size: 0.8rem;
+		font-size: 1.05rem;
 	}
 
 	.draggable-company {
