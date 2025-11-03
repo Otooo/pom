@@ -20,10 +20,10 @@ jobs:
       - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.19'
+          node-version: '20'
 
       - name: 🧰 Instalar dependências
-        run: npm install
+        run: npm ci
 
       - name: 🚀 Deploy para Railway
         run: npm run deploy:ci
